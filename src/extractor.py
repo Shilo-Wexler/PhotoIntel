@@ -29,7 +29,7 @@ def sanitize_string(val):
         The cleaned string or the original value if not a string.
     """
     if isinstance(val, str):
-        return val.strip('\x00').strip()
+        return val.strip(' \x00\t\n\r').strip()
     return val
 
 
@@ -57,7 +57,12 @@ def dms_to_decimal(dms_tuple, ref):
     Returns:
         float: The decimal degree value (negative for S/W references), or None if invalid.
     """
-    if not dms_tuple or len(dms_tuple) < 3 or not ref:
+
+    negative_refs = {'S', b'S', 'W', b'W'}
+    positive_refs = {'N', b'N', 'E', b'E'}
+    refs = negative_refs | positive_refs
+
+    if None in {dms_tuple, ref} or len(dms_tuple) < 3 or ref not in refs:
         return None
 
     degrees = to_float(dms_tuple[0])
@@ -69,7 +74,7 @@ def dms_to_decimal(dms_tuple, ref):
 
     decimal = degrees + (minutes / 60) + (seconds / 3600)
 
-    if ref in [b'S', b'W', 'S', 'W']:
+    if ref in negative_refs:
         decimal = -decimal
     return decimal
 
