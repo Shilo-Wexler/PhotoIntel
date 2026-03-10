@@ -1,5 +1,8 @@
 import unittest
-from src.extractor import sanitize_string, to_float, dms_to_decimal
+import unittest.mock as mock
+from src.extractor_utils import sanitize_string, to_float, dms_to_decimal, to_int
+from src.extractor import get_empty_metadata, extract_metadata
+from pathlib import Path
 
 class TestPhotoIntel(unittest.TestCase):
     def test_sanitize_basic(self):
@@ -56,6 +59,40 @@ class TestPhotoIntel(unittest.TestCase):
         self.assertEqual(dms_to_decimal((MockRat(),0,0),'N'),30.0)
         self.assertEqual(dms_to_decimal((10,0,0),b'N'),10.0)
         self.assertIsNone(dms_to_decimal((32,None,0),'N'))
+    def test_to_int_standard(self):
+        self.assertEqual(to_int("100"),100)
+        self.assertEqual(to_int(800.0),800)
+        self.assertIsNone(to_int(None))
+    def test_to_int_garbage(self):
+        self.assertIsNone(to_int("ISO100"))
+        self.assertIsNone(to_int("ABC"))
+    def test_empty_metadata(self):
+        empty = get_empty_metadata(Path("images_copy/sample_data/20230118_070716.jpg"))
+        expected_keys = {
+            "filename", "full_path", "datetime", "latitude", "longitude",
+            "camera_make", "camera_model", "has_gps", "software",
+            "modify_date", "altitude", "direction", "exposure_time",
+            "iso", "f_number"
+        }
+        self.assertTrue(expected_keys.issubset(empty.keys()))
+        self.assertIsNone(empty["iso"])
+        self.assertFalse(empty["has_gps"])
+
+    def test_extract_metadata_integration(self):
+        with mock.patch('src.extractor.get_raw_exif') as mocked_exif:
+            mocked_exif.return_value = {
+                271: "Apple", #make
+                272: "iPhone 13 ", #model
+                305: "Adobe Photoshop", #software
+                34855: "800" #ISO
+            }
+            result = extract_metadata("dummy.jpg")
+            self.assertEqual(result["camera_make"], "Apple")
+            self.assertEqual(result["software"], "Adobe Photoshop")
+            self.assertEqual(result["iso"], 800)
+            self.assertIsInstance(result["iso"], int)
+
+
 
 
 
