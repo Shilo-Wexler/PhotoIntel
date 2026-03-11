@@ -1,33 +1,6 @@
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional
 import constants
-
-@dataclass
-class ImageMetadata:
-    filename: str
-
-
-
-
-@dataclass
-class ImageRiskProfile:
-    filename: str
-    has_exif: bool
-    timestamp: Optional[datetime]
-    lat: Optional[float]
-    lon: Optional[float]
-    device: str
-    total_score: int
-    is_suspicious: bool
-    software_issue: bool
-    device_issue: bool
-    temporal_issue: bool
-    altitude_issue: bool
-    gps_issue: bool
-    optical_issue: bool
-
-
 
 
 class PhotoAnalyzer:

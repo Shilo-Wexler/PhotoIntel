@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 from src.extractor_utils import sanitize_string, to_float, dms_to_decimal, to_int
-from src.extractor import get_empty_metadata, extract_metadata
+from src.extractor import  extract_metadata
 from pathlib import Path
 
 class TestPhotoIntel(unittest.TestCase):
@@ -66,37 +66,42 @@ class TestPhotoIntel(unittest.TestCase):
     def test_to_int_garbage(self):
         self.assertIsNone(to_int("ISO100"))
         self.assertIsNone(to_int("ABC"))
-    def test_empty_metadata(self):
-        empty = get_empty_metadata(Path("images_copy/sample_data/20230118_070716.jpg"))
-        expected_keys = {
-            "filename", "full_path", "datetime", "latitude", "longitude",
-            "camera_make", "camera_model", "has_gps", "software",
-            "modify_date", "altitude", "direction", "exposure_time",
-            "iso", "f_number"
-        }
-        self.assertTrue(expected_keys.issubset(empty.keys()))
-        self.assertIsNone(empty["iso"])
-        self.assertFalse(empty["has_gps"])
 
-    def test_extract_metadata_integration(self):
-        with mock.patch('src.extractor.get_raw_exif') as mocked_exif:
-            mocked_exif.return_value = {
-                271: "Apple", #make
-                272: "iPhone 13 ", #model
-                305: "Adobe Photoshop", #software
-                34855: "800" #ISO
-            }
-            result = extract_metadata("dummy.jpg")
-            self.assertEqual(result["camera_make"], "Apple")
-            self.assertEqual(result["software"], "Adobe Photoshop")
-            self.assertEqual(result["iso"], 800)
-            self.assertIsInstance(result["iso"], int)
+    def test_dms_to_decimal_edge_values(self):
+        self.assertEqual(dms_to_decimal((90, 0, 0), 'N'), 90)
+        self.assertEqual(dms_to_decimal((180, 0, 0), 'E'), 180)
+        self.assertEqual(dms_to_decimal((90, 0, 0), 'S'), -90)
+        self.assertEqual(dms_to_decimal((180, 0, 0), 'W'), -180)
+
+    def test_to_float_invalid_strings(self):
+        self.assertIsNone(to_float("abc"))
+        self.assertIsNone(to_float([1, 2, 3]))
+
+    def test_sanitize_unicode_and_special_chars(self):
+        self.assertEqual(sanitize_string("  Café "), "Café")
+        self.assertEqual(sanitize_string(" \x00Tab\t "), "Tab")
+
+    @mock.patch("extractor.Image.open")
+    def test_get_raw_exif_success(self, mock_open):
+        mock_img = mock.Mock()
+        mock_img._getexif.return_value = {"Make": "Canon"}
+        mock_open.return_value.__enter__.return_value = mock_img
+        from extractor import get_raw_exif
+        exif = get_raw_exif(Path("/fake/path/image.jpg"))
+        self.assertEqual(exif, {"Make": "Canon"})
+
+    @mock.patch("extractor.Image.open")
+    def test_get_raw_exif_failure(self, mock_open):
+        mock_open.side_effect = IOError("cannot open")
+        from extractor import get_raw_exif
+        self.assertIsNone(get_raw_exif(Path("/fake/path/image.jpg")))
 
 
-
-
-
-
+    @mock.patch("extractor.get_raw_exif", return_value=None)
+    def test_extract_metadata_no_exif(self, mock_exif):
+        metadata = extract_metadata("/fake/path/image.jpg")
+        self.assertFalse(metadata.has_exif)
+        self.assertEqual(metadata.filename, "image.jpg")
 
 
 

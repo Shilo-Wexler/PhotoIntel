@@ -1,72 +1,86 @@
 """
 Extractor Utilities Module
 --------------------------
-This module provide helper functions for
-the EXIF metadata extraction process.
-It includes functions for data cleaning
-(sanitization), coordinates conversion,
-and specific field extraction from raw
-EXIF tags.
+Provides low-level helper functions for EXIF metadata processing.
+This module handles data sanitization, coordinate conversion (DMS to Decimal),
+and safe type casting (Rational to Float).
 
-Functions:
-    - to_float: Safe conversion of EXIF
-Rationals to float numbers.
-    - sanitize_string: Cleaning and
-stripping whitespace from text fields.
+It is designed to fail gracefully by returning None instead of raising
+exceptions during data parsing.
 """
+
+
 from typing import Optional, Any
 
-def sanitize_string(val: Any)->Any:
+
+
+def sanitize_string(val: Any) -> Any:
     """
-    Remove null bytes and whitespace
-    from string values.
+    Clean string values by removing null bytes, tabs.
 
     Args:
-        val: The value to clean.
+        val (Any): The raw value to clean.
+
     Returns:
-        The cleaned string or the original value if not a string.
+        Any: Cleaned string if input was string , otherwise returns the original value.
     """
+
     if isinstance(val, str):
         return val.strip(' \x00\t\n\r')
+
     return val
 
 
-def to_float(value: Any)->Optional[float]:
+def to_float(value: Any) -> Optional[float]:
     """
-    Convert EXIF numeric or Rational
-    values to float, returning None on failure.
+    Safely converts EXIF numeric or Rational values to a float.
+    Handles 'IFDRational' types by calculating numerator/denominator.
+
+    Args:
+        value (Any): The raw numeric or Rational value.
+
+    Returns:
+        Optional[float]: Float value or None if conversion fails
+         or division by zero occurs.
     """
+
     try:
         if hasattr(value, 'numerator') and hasattr(value, 'denominator'):
             return float(value.numerator) / float(value.denominator)
+
         return float(value)
-    except (TypeError, ZeroDivisionError, AttributeError):
+    except (TypeError, ZeroDivisionError, AttributeError, ValueError):
         return None
 
 
-def to_int(value: Any)->Optional[int]:
+def to_int(value: Any) -> Optional[int]:
     """
-    Safely convert a value to an integer.
-    Returns None if the value is invalid or a string that cannot be converted.
+    Safely converts a value to an integer.
+
+    Args:
+        value (Any): The raw value to convert.
+
+    Returns:
+        Optional[int]: Integer value or None if conversion is not possible.
     """
+
     try:
-        if value is None:
-            return None
         return int(value)
     except (ValueError, TypeError):
         return None
 
 
-def dms_to_decimal(dms_tuple: tuple, ref: Any)->Optional[float]:
+def dms_to_decimal(dms_tuple: tuple, ref: Any) -> Optional[float]:
     """
-    Converts coordinates from DMS (Degrees, Minutes, and Seconds) format to decimal degrees.
+    Converts Degrees, Minutes, Seconds (DMS) coordinates to Decimal Degrees.
 
     Args:
-        dms_tuple (tuple): A tuple containing Degrees, Minutes, and Seconds.
-        ref (str): Geographic reference direction (N, S, E, W).
+        dms_tuple (tuple): A tuple DNS in Rational format.
+
+        ref (str/bytes): Geographic reference directions.
 
     Returns:
-        float: The decimal degree value (negative for S/W references), or None if invalid.
+        Optional[float]: Decimal coordinates, or None if invalid.
     """
 
     negative_refs = {'S', b'S', 'W', b'W'}
@@ -90,95 +104,163 @@ def dms_to_decimal(dms_tuple: tuple, ref: Any)->Optional[float]:
     return decimal
 
 
-def has_gps(exif_data: dict):
+def has_gps(exif_data: dict) -> bool:
     """
-    Checks if GPS information is
-    present in the metadata dictionary.
+    Checks if the 'GPSInfo' tag is present in the EXIF dictionary.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        bool: True if 'GPSInfo' tag exists, False otherwise.
     """
+
     return "GPSInfo" in exif_data
 
 
-def latitude(exif_data: dict):
+def latitude(exif_data: dict) -> Optional[float]:
     """
-    Extract latitude from the EXIF
-    data dictionary.
+    Extract and converts latitude from GPSInfo to decimal degrees.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+         Optional[float]: Latitude in decimal degrees, or None if tag 2 is missing.
     """
+
     gps_info = exif_data.get("GPSInfo")
+
     if isinstance(gps_info, dict) and 2 in gps_info:
         return dms_to_decimal(gps_info[2], gps_info.get(1))
+
     return None
 
 
-def longitude(exif_data: dict):
+def longitude(exif_data: dict) -> Optional[float]:
     """
-    Extract longitude from the EXIF
-    data dictionary.
+    Extract and converts longitude from GPSInfo to decimal degrees.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        Optional[float]: Longitude in decimal degrees, or None if tag 4 is missing.
     """
     gps_info = exif_data.get("GPSInfo")
+
     if isinstance(gps_info, dict) and 4 in gps_info:
         return dms_to_decimal(gps_info[4], gps_info.get(3))
+
     return None
 
 
-def altitude(exif_data: dict):
+def altitude(exif_data: dict) -> Optional[float]:
     """
-    Extract altitude from GPSInfo safely.
+    Extract altitude (height above sea level) from GPSInfo.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+       Optional[float]: Altitude value from tag 6, or None if unavailable.
     """
+
     gps_info = exif_data.get("GPSInfo")
+
     if isinstance(gps_info, dict):
         return gps_info.get(6)
+
     return None
 
 
-def extract_timestamp(exif_data: dict):
+def extract_timestamp(exif_data: dict) -> Optional[str]:
     """
-    Extract the best available
-    timestamp from the metadata.
+    Retrieves the original capture timestamp from the metadata.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        Optional[str]: The 'DateTimeOriginal' as a string, or None if missing.
     """
+
     dt = exif_data.get("DateTimeOriginal")
     return str(dt) if dt else None
 
 
-def camera_make(exif_data: dict):
+def camera_make(exif_data: dict) -> Optional[str]:
     """
-    Retrieves the camera manufacturer
-    from EXIF data.
+    Retrieves the camera manufacturer name.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        Optional[str]: The manufacturer (e.g., 'Apple', 'Canon') or None.
     """
+
     return exif_data.get("Make")
 
 
-def camera_model(exif_data: dict):
+def camera_model(exif_data: dict) -> Optional[str]:
     """
-    Retrieves the camera model name
-    from EXIF data.
+    Retrieves the specific camera or device model name.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        Optional[str]: The model name (e.g., 'iPhone 15 Pro') or None.
     """
+
     return exif_data.get("Model")
 
 
-def software_info(exif_data: dict):
+def software_info(exif_data: dict) -> Optional[str]:
     """
-    Extract the software name used to
-    create or edit the image.
+    Extract the name and version of the software used to process the image.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        Optional[str]: The software information, or None.
     """
+
     software = exif_data.get("Software")
     return str(software) if software else None
 
 
-def modification_date(exif_data: dict):
+def modification_date(exif_data: dict) -> Optional[str]:
     """
-    Extracts the last modification
-    date from EXIF.
+    Extracts the last modification date stored in the EXIF header.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        Optional[str]: The 'DateTime' (Tag 306) value or None.
     """
+
     mod_date = exif_data.get("DateTime")
     return str(mod_date) if mod_date else None
 
 
-def exposure_stats(exif_data: dict):
+def exposure_stats(exif_data: dict) -> dict:
     """
-    Extract technical exposure
-    settings (ISO, Shutter Speed,
-    Aperture).
+    Extract the core technical exposure settings for optical analysis.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        dict: A dictionary containing:
+        - 'exposure_time': The shutter speed.
+        - 'iso': The sensor sensitivity.
+        - 'f_number': The lens aperture
     """
+
     return {
         "exposure_time": exif_data.get("ExposureTime"),
         "iso": exif_data.get("ISOSpeedRatings"),
@@ -186,13 +268,21 @@ def exposure_stats(exif_data: dict):
     }
 
 
-def direction(exif_data: dict):
+def direction(exif_data: dict) -> Optional[float]:
     """
-    Extract image direction from
-    GPSInfo safely.
+    Extract the image direction (compass heading) from GPSInfo.
+
+    Args:
+        exif_data (dict): The dictionary containing raw EXIF tags.
+
+    Returns:
+        Optional[float]: The direction value from GPS tag 17, or None
+         if the tag is invalid.
     """
     gps_info = exif_data.get("GPSInfo")
+
     if isinstance(gps_info, dict):
         return gps_info.get(17)
+
     return None
 
