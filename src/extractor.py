@@ -20,6 +20,7 @@ def get_empty_metadata(path: Path):
     return {
         "filename": path.name,
         "full_path": path,
+        "has_exif": False,
         "datetime": None,
         "latitude": None,
         "longitude": None,
@@ -82,6 +83,7 @@ def extract_metadata(image_path):
     exp = utils.exposure_stats(raw_tags)
 
     metadata.update({
+        "has_exif": True,
         "latitude": utils.latitude(raw_tags),
         "longitude": utils.longitude(raw_tags),
         "has_gps": utils.has_gps(raw_tags),

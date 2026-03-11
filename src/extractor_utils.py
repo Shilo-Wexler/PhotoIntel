@@ -14,7 +14,6 @@ Rationals to float numbers.
     - sanitize_string: Cleaning and
 stripping whitespace from text fields.
 """
-
 from typing import Optional, Any
 
 def sanitize_string(val: Any)->Any:
