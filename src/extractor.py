@@ -14,6 +14,7 @@ sanitization, ensuring that only clean, type-safe data reaches the Analysis Laye
 import logging
 from pathlib import Path
 from typing import Optional
+from dataclasses import dataclass
 
 from PIL import Image
 from PIL.ExifTags import TAGS
@@ -27,26 +28,39 @@ from models import ImageMetadata
 logger = logging.getLogger(__name__)
 
 
-def get_raw_exif(image_path: Path) -> Optional[dict]:
+
+@dataclass
+class RawImageData:
+    exif: Optional[dict] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+
+
+def get_image_data(image_path: Path) -> RawImageData:
     """
-    Safely opens an image file and retrieves its raw EXIF data.
+    Safely opens an image file and retrieves its raw EXIF data and dimensions.
 
     Args:
         image_path (Path): The pathlib.Path object pointing to the image.
 
     Returns:
-        Optional[dict]: A dictionary of raw EXIF tags if found,
-                        None if the file is not an image or is corrupted.
+        RawImageData: A data object containing the raw EXIF dictionary, width, and height.
+                      If extraction fails, returns an empty RawImageData instance
+                      with all fields set to None.
     """
 
     try:
         with Image.open(image_path) as img:
-            # noinspection PyProtectedMember
-            exif = img._getexif()
-            return exif
+            return RawImageData(
+                # noinspection PyProtectedMember
+                exif = img._getexif(),
+                width = img.width,
+                height= img.height
+            )
     except Exception as e:
         logger.error(f"Failed to process {image_path}: {e}")
-        return None
+
+        return RawImageData()
 
 
 def extract_metadata(image_path: str) -> ImageMetadata:
@@ -64,45 +78,44 @@ def extract_metadata(image_path: str) -> ImageMetadata:
     """
 
     path = Path(image_path)
-    exif = get_raw_exif(path)
+    raw_data = get_image_data(path)
 
-
-    if not exif:
-        return ImageMetadata(filename=path.name, full_path=str(path.resolve()))
-
+    if not raw_data.exif:
+        return ImageMetadata(
+            filename=path.name,
+            full_path=str(path.resolve()),
+            pixel_width=raw_data.width,
+            pixel_height=raw_data.height
+        )
 
     raw_tags = {TAGS.get(tag_id, tag_id): value for tag_id, value in exif.items()}
 
-    text_mapping = {
-        "datetime": utils.extract_timestamp,
-        "camera_make": utils.camera_make,
-        "camera_model": utils.camera_model,
-        "software": utils.software_info,
-        "modify_date": utils.modification_date,
-    }
-
-    extract_fields = {field: utils.sanitize_string(func(raw_tags))
-                      for field, func in text_mapping.items()}
-
     exp = utils.exposure_stats(raw_tags)
 
-    extract_fields.update({
-        "latitude": utils.latitude(raw_tags),
-        "longitude": utils.longitude(raw_tags),
-        "has_gps": utils.has_gps(raw_tags),
-        "altitude": utils.to_float(utils.altitude(raw_tags)),
-        "direction": utils.to_float(utils.direction(raw_tags)),
-        "exposure_time": utils.to_float(exp.get('exposure_time')),
-        "iso": utils.to_int(exp.get('iso')),
-        "f_number": utils.to_float(exp.get('f_number'))
-    })
-
     return ImageMetadata(
-        filename=path.name,
-        full_path=str(path.resolve()),
-        has_exif=True,
-        **extract_fields
+    filename = path.name,
+    full_path = str(path.resolve()),
+    has_exif = True,
+    has_gps = utils.has_gps(raw_tags),
+    datetime = utils.extract_timestamp(raw_tags),
+    latitude = utils.latitude(raw_tags),
+    longitude = utils.longitude(raw_tags),
+    camera_make = utils.camera_make(raw_tags),
+    camera_model = utils.camera_model(raw_tags),
+    software = utils.software_info(raw_tags),
+    modify_date = utils.modification_date(raw_tags),
+    altitude = utils.altitude(raw_tags),
+    direction = utils.direction(raw_tags),
+    exposure_time = exp.get('exposure_time'),
+    iso = exp.get('iso'),
+    f_number = exp.get('f_number'),
+    pixel_width=width,
+    pixel_height=height
+
+
+
     )
+
 
 
 def extract_all(folder_path: str) -> list[ImageMetadata]:

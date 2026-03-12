@@ -127,3 +127,4 @@ dmypy.json
 images_copy/
 *.pyc
 main_test.py
+main_t.py

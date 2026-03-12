@@ -1,6 +1,6 @@
 import unittest
 import unittest.mock as mock
-from src.extractor_utils import sanitize_string, to_float, dms_to_decimal, to_int
+from converters import sanitize_string, to_float, dms_to_decimal, to_int
 from src.extractor import  extract_metadata
 from pathlib import Path
 
@@ -86,15 +86,15 @@ class TestPhotoIntel(unittest.TestCase):
         mock_img = mock.Mock()
         mock_img._getexif.return_value = {"Make": "Canon"}
         mock_open.return_value.__enter__.return_value = mock_img
-        from extractor import get_raw_exif
-        exif = get_raw_exif(Path("/fake/path/image.jpg"))
+        from extractor import get_image_data
+        exif = get_image_data(Path("/fake/path/image.jpg"))
         self.assertEqual(exif, {"Make": "Canon"})
 
     @mock.patch("extractor.Image.open")
     def test_get_raw_exif_failure(self, mock_open):
         mock_open.side_effect = IOError("cannot open")
-        from extractor import get_raw_exif
-        self.assertIsNone(get_raw_exif(Path("/fake/path/image.jpg")))
+        from extractor import get_image_data
+        self.assertIsNone(get_image_data(Path("/fake/path/image.jpg")))
 
 
     @mock.patch("extractor.get_raw_exif", return_value=None)

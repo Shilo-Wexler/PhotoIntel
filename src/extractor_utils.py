@@ -1,107 +1,18 @@
 """
 Extractor Utilities Module
 --------------------------
-Provides low-level helper functions for EXIF metadata processing.
-This module handles data sanitization, coordinate conversion (DMS to Decimal),
-and safe type casting (Rational to Float).
+Provides helper functions for mapping raw EXIF tags to structured data.
+This module bridges the gap between raw metadata and typed values,
+utilizing 'converters.py' for low-level parsing and casting.
 
-It is designed to fail gracefully by returning None instead of raising
-exceptions during data parsing.
+Designed to fail gracefully by returning None on missing or malformed data.
 """
 
-
-from typing import Optional, Any
-
+from typing import Optional
 
 
-def sanitize_string(val: Any) -> Any:
-    """
-    Clean string values by removing null bytes, tabs.
+from converters import dms_to_decimal, sanitize_string, to_float, to_int
 
-    Args:
-        val (Any): The raw value to clean.
-
-    Returns:
-        Any: Cleaned string if input was string , otherwise returns the original value.
-    """
-
-    if isinstance(val, str):
-        return val.strip(' \x00\t\n\r')
-
-    return val
-
-
-def to_float(value: Any) -> Optional[float]:
-    """
-    Safely converts EXIF numeric or Rational values to a float.
-    Handles 'IFDRational' types by calculating numerator/denominator.
-
-    Args:
-        value (Any): The raw numeric or Rational value.
-
-    Returns:
-        Optional[float]: Float value or None if conversion fails
-         or division by zero occurs.
-    """
-
-    try:
-        if hasattr(value, 'numerator') and hasattr(value, 'denominator'):
-            return float(value.numerator) / float(value.denominator)
-
-        return float(value)
-    except (TypeError, ZeroDivisionError, AttributeError, ValueError):
-        return None
-
-
-def to_int(value: Any) -> Optional[int]:
-    """
-    Safely converts a value to an integer.
-
-    Args:
-        value (Any): The raw value to convert.
-
-    Returns:
-        Optional[int]: Integer value or None if conversion is not possible.
-    """
-
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return None
-
-
-def dms_to_decimal(dms_tuple: tuple, ref: Any) -> Optional[float]:
-    """
-    Converts Degrees, Minutes, Seconds (DMS) coordinates to Decimal Degrees.
-
-    Args:
-        dms_tuple (tuple): A tuple DNS in Rational format.
-
-        ref (str/bytes): Geographic reference directions.
-
-    Returns:
-        Optional[float]: Decimal coordinates, or None if invalid.
-    """
-
-    negative_refs = {'S', b'S', 'W', b'W'}
-    positive_refs = {'N', b'N', 'E', b'E'}
-    refs = negative_refs | positive_refs
-
-    if None in {dms_tuple, ref} or len(dms_tuple) < 3 or ref not in refs:
-        return None
-
-    degrees = to_float(dms_tuple[0])
-    minutes = to_float(dms_tuple[1])
-    seconds = to_float(dms_tuple[2])
-
-    if None in {degrees, minutes, seconds}:
-        return None
-
-    decimal = degrees + (minutes / 60) + (seconds / 3600)
-
-    if ref in negative_refs:
-        decimal = -decimal
-    return decimal
 
 
 def has_gps(exif_data: dict) -> bool:
@@ -169,7 +80,7 @@ def altitude(exif_data: dict) -> Optional[float]:
     gps_info = exif_data.get("GPSInfo")
 
     if isinstance(gps_info, dict):
-        return gps_info.get(6)
+        return to_float(gps_info.get(6))
 
     return None
 
@@ -186,7 +97,7 @@ def extract_timestamp(exif_data: dict) -> Optional[str]:
     """
 
     dt = exif_data.get("DateTimeOriginal")
-    return str(dt) if dt else None
+    return sanitize_string(str(dt)) if dt else None
 
 
 def camera_make(exif_data: dict) -> Optional[str]:
@@ -200,7 +111,7 @@ def camera_make(exif_data: dict) -> Optional[str]:
         Optional[str]: The manufacturer (e.g., 'Apple', 'Canon') or None.
     """
 
-    return exif_data.get("Make")
+    return sanitize_string(exif_data.get("Make"))
 
 
 def camera_model(exif_data: dict) -> Optional[str]:
@@ -214,7 +125,7 @@ def camera_model(exif_data: dict) -> Optional[str]:
         Optional[str]: The model name (e.g., 'iPhone 15 Pro') or None.
     """
 
-    return exif_data.get("Model")
+    return sanitize_string(exif_data.get("Model"))
 
 
 def software_info(exif_data: dict) -> Optional[str]:
@@ -229,7 +140,7 @@ def software_info(exif_data: dict) -> Optional[str]:
     """
 
     software = exif_data.get("Software")
-    return str(software) if software else None
+    return sanitize_string(str(software)) if software else None
 
 
 def modification_date(exif_data: dict) -> Optional[str]:
@@ -244,7 +155,7 @@ def modification_date(exif_data: dict) -> Optional[str]:
     """
 
     mod_date = exif_data.get("DateTime")
-    return str(mod_date) if mod_date else None
+    return sanitize_string(str(mod_date)) if mod_date else None
 
 
 def exposure_stats(exif_data: dict) -> dict:
@@ -262,9 +173,9 @@ def exposure_stats(exif_data: dict) -> dict:
     """
 
     return {
-        "exposure_time": exif_data.get("ExposureTime"),
-        "iso": exif_data.get("ISOSpeedRatings"),
-        "f_number": exif_data.get("FNumber")
+        "exposure_time": to_float(exif_data.get("ExposureTime")),
+        "iso": to_int(exif_data.get("ISOSpeedRatings")),
+        "f_number": to_float(exif_data.get("FNumber"))
     }
 
 
@@ -282,7 +193,6 @@ def direction(exif_data: dict) -> Optional[float]:
     gps_info = exif_data.get("GPSInfo")
 
     if isinstance(gps_info, dict):
-        return gps_info.get(17)
+        return to_float(gps_info.get(17))
 
     return None
-

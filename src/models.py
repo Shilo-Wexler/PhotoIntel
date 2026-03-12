@@ -32,7 +32,7 @@ class ImageMetadata:
     filename: str
     full_path: str
     has_exif: bool = False
-    has_gps: Optional[bool] = False
+    has_gps: bool = False
     datetime: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
@@ -43,8 +43,10 @@ class ImageMetadata:
     altitude: Optional[float] = None
     direction: Optional[float] = None
     exposure_time: Optional[float] = None
-    iso: Optional[int] = None
     f_number: Optional[float] = None
+    pixel_width: Optional[int] = None
+    pixel_height: Optional[int] = None
+    iso: Optional[int] = None
 
 
 @dataclass
@@ -57,7 +59,7 @@ class ImageRiskProfile:
 
     filename: str
     full_path: str
-    device: str = None
+    device: Optional[str] = None
     timestamp: Optional[datetime] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None

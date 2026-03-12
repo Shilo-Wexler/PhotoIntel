@@ -1,48 +1,53 @@
+"""
+Forensic System Constants.
 
-MAX_ALTITUDE = 8000
+Contains threshold values, signature sets, and configuration constants
+used across the forensic analysis pipeline.
+"""
 
-MIN_ALTITUDE = -450
+# --- Physical & Geographical Thresholds ---
+MAX_ALTITUDE = 8000.0       # Max altitude in meters (approx. Everest)
+MIN_ALTITUDE = -450.0       # Min altitude in meters (approx. Dead Sea)
 
-HIGH_ISO= 1600
+EARTH_MAX_LAT = 90.0
+EARTH_MIN_LAT = -90.0
+EARTH_MAX_LON = 180.0
+EARTH_MIN_LON = -180.0
 
+# --- Optical & Exposure Analysis ---
+HIGH_ISO = 1600
 MIN_HIGH_ISO = 800
+LONG_EXPOSURE = 0.1         # Seconds
+LOW_NIGHT_F_STOP = 2.0      # Aperture
 
-LONG_EXPOSURE = 0.5
+# --- Temporal Configuration ---
+DAY_START = 7               # 07:00 AM
+DAY_END = 19                # 07:00 PM
+MAX_TIME_DIFF_SEC = 60      # Seconds
 
-IMPOSSIBLE_F_STOP = 2.0
+# --- Digital Signatures & Artifacts ---
 
-MAX_TIME_DIFF_SEC = 60
-
-
-
-PRO_SOFTWARE = {'photoshop', 'gimp',
-    'adobe', 'affinity'}
-
-MOBILE_APP = {'snapseed', 'picsart',
-    'canva'}
-
-AI_SOFTWARE = {
-    "midjourney", "stable diffusion", "stablediffusion",
-    "automatic1111", "invokeai",  "comfyui", "dalle",
-    "runway","leonardo","dreamstudio","nightcafe",
-    "nanobanana", 'stable', 'midjourney', 'nanobanana',
-    'dalle', 'runway'
+EDITING_SOFTWARE = {
+    'photoshop', 'lightroom', 'adobe', 'affinity', 'capture one',
+    'gimp', 'krita', 'paint.net', 'darktable', 'rawtherapee', 'corel',
+    'paintshop', 'preview', 'windows photo', 'apple photos',
+    'photoscape', 'fotor', 'photopea', 'pixlr', 'sumopaint', 'lunapic',
+    'befunky', 'snapseed', 'picsart', 'canva', 'polarr', 'vsco',
+    'facetune', 'remini', 'lightleap', 'instasize', 'photo director'
 }
 
-VIRTUAL_DEVICE = {'emulator',
-    'simulator', 'virtual', 'vmware',
-                  'androidid'}
+AI_SOFTWARE = {
+    'midjourney', 'stable diffusion', 'stablediffusion', 'dalle', 'dall-e',
+    'automatic1111', 'invokeai', 'comfyui', 'runway', 'leonardo',
+    'dreamstudio', 'nightcafe', 'nanobanana'
+}
+
+VIRTUAL_DEVICE = {
+    'emulator', 'simulator', 'virtual', 'vmware', 'androidid',
+    'genymotion', 'bluestacks', 'qemu', 'nox', 'memu', 'vbox', 'virtualbox'
+}
 
 SUPPORTED_EXTENSIONS = {
-    # Standard Web/Mobile Formats
-    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
-
-    # Apple & Modern High-Efficiency Formats
-    '.heic', '.heif', '.avif',
-
-    # Professional/Lossless Formats
-    '.tiff', '.tif', '.jp2', '.jpx', '.jxr', '.tga', '.psd', '.pxm',
-
-    # Common RAW Formats (Professional Cameras)
-    '.raw', '.cr2', '.crw', '.nef', '.arw', '.sr2', '.srf', '.pef', '.orf', '.raf', '.rw2', '.dng'
+    '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.avif',
+    '.tiff', '.tif', '.raw', '.cr2', '.nef', '.arw', '.dng'
 }
