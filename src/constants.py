@@ -47,7 +47,23 @@ VIRTUAL_DEVICE = {
     'genymotion', 'bluestacks', 'qemu', 'nox', 'memu', 'vbox', 'virtualbox'
 }
 
+# --- AI Specific Constants ---
+AI_MODULO = 64                    # Math signature of Diffusion models
+AI_RESOLUTIONS = {512, 1024}      # Common AI square output sizes
+
+# --- Supported File Extensions --
 SUPPORTED_EXTENSIONS = {
     '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.avif',
     '.tiff', '.tif', '.raw', '.cr2', '.nef', '.arw', '.dng'
 }
+
+# --- Geolocation & Navigation ---
+EARTH_RADIUS_KM = 6371.0
+MAX_SPEED_KMH = 900.0        # Cruising speed of a commercial jet
+MIN_TIME_DIFF_SEC = 1.0      # Minimum time to calculate speed between photos
+CLUSTER_RADIUS_KM = 8.0      # Proximity threshold for location grouping
+
+# --- Display Defaults ---
+UNKNOWN_DEVICE = 'Unknown Device'
+
+

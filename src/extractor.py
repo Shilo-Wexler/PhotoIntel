@@ -88,7 +88,7 @@ def extract_metadata(image_path: str) -> ImageMetadata:
             pixel_height=raw_data.height
         )
 
-    raw_tags = {TAGS.get(tag_id, tag_id): value for tag_id, value in exif.items()}
+    raw_tags = {TAGS.get(tag_id, tag_id): value for tag_id, value in raw_data.exif.items()}
 
     exp = utils.exposure_stats(raw_tags)
 
@@ -109,8 +109,8 @@ def extract_metadata(image_path: str) -> ImageMetadata:
     exposure_time = exp.get('exposure_time'),
     iso = exp.get('iso'),
     f_number = exp.get('f_number'),
-    pixel_width=width,
-    pixel_height=height
+    pixel_width=raw_data.width,
+    pixel_height=raw_data.height
 
 
 

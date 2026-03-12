@@ -3,15 +3,13 @@
 Forensic Data Models
 --------------------
 
-Defines the core data structure for
-image metadata and risk analysis.
+Defines the core data structure for image metadata and risk analysis.
 
-Used as the central schema between the
-Extractor and Analyzer modules.
+Used as the central schema between the Extractor and Analyzer modules.
 """
 
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
@@ -20,12 +18,10 @@ from typing import Optional
 class ImageMetadata:
 
     """
-    Represents the raw evidentiary data
-    extracted from an image file.
+    Represents the raw evidentiary data extracted from an image file.
 
-    This class serves as a Data Transfer
-    Object (DTO) between the Ingestion layer
-    (Extractor) and the Analysis layer
+    This class serves as a Data Transfer Object (DTO)
+    between the Ingestion layer (Extractor) and the Analysis layer
     (Analyzer).
     """
 
@@ -49,12 +45,11 @@ class ImageMetadata:
     iso: Optional[int] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class ImageRiskProfile:
 
     """
-    Forensic analysis results and risk
-    scoring.
+    Forensic analysis results and risk scoring.
     """
 
     filename: str
@@ -63,11 +58,10 @@ class ImageRiskProfile:
     timestamp: Optional[datetime] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    total_score: Optional[int] = 0
+
     has_exif: bool = False
     is_suspicious: bool = False
 
-    #Forensic Flags
     software_issue: bool = False
     device_issue: bool = False
     temporal_issue: bool = False
@@ -75,3 +69,30 @@ class ImageRiskProfile:
     gps_issue: bool = False
     optical_issue: bool = False
     ai_issue: bool = False
+
+
+@dataclass
+class CollectionInsights:
+    """
+    Represents the high-level analysis of an entire image collection.
+    """
+
+    image_profiles: list[ImageRiskProfile]
+
+    total_count: int = 0
+    suspicious_images: int = 0
+    images_with_exif: int = 0
+    images_with_gps: int = 0
+
+    ai_count: int = 0
+    software_edit_count: int = 0
+    gps_tampering_count: int = 0
+    device_anomaly_count: int = 0
+
+    unique_device_models: list[str] = field(default_factory=list)
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+
+    location_clusters: list[dict] = field(default_factory=list)
+    teleportation_incidents: list[dict] = field(default_factory=list)
+

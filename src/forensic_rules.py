@@ -6,15 +6,15 @@ This module provides a suite of analysis rules to detect anomalies,
 physical inconsistencies, and synthetic signatures in image metadata.
 """
 
-from typing import Optional
 
+from typing import Optional
 
 import src.constants as constants
 from src.converters import parse_date
 from src.models import ImageMetadata
 
 
-def _is_ai_generated(metadata: ImageMetadata) -> bool:
+def is_ai_generated(metadata: ImageMetadata) -> bool:
     """
     Identifies digital signatures of Generative AI tools.
 
@@ -25,12 +25,23 @@ def _is_ai_generated(metadata: ImageMetadata) -> bool:
         bool: True if AI-generation evidence is found, False otherwise.
     """
 
-    return _check_text_signatures(
+    ai_in_fields = _check_text_signatures(
         metadata, constants.AI_SOFTWARE
     )
 
+    if ai_in_fields:
+        return True
 
-def _is_altitude_anomaly(metadata: ImageMetadata) -> bool:
+    w, h = metadata.pixel_width, metadata.pixel_height
+
+    if w and h:
+       return ((w == h and w in constants.AI_RESOLUTIONS)
+            or (w % constants.AI_MODULO == 0 and h % constants.AI_MODULO == 0))
+
+    return False
+
+
+def is_altitude_anomaly(metadata: ImageMetadata) -> bool:
     """
     Detects suspicious altitude values that are physically improbable.
 
@@ -50,7 +61,7 @@ def _is_altitude_anomaly(metadata: ImageMetadata) -> bool:
     return too_high or too_low
 
 
-def _has_gps_issue(metadata: ImageMetadata) -> bool:
+def has_gps_issue(metadata: ImageMetadata) -> bool:
     """
     Performs a comprehensive integrity check on GPS data.
 
@@ -99,7 +110,7 @@ def _has_gps_issue(metadata: ImageMetadata) -> bool:
     return False
 
 
-def _has_optical_issue(metadata: ImageMetadata) -> bool:
+def has_optical_issue(metadata: ImageMetadata) -> bool:
     """
     Checks for exposure parameter inconsistencies based on basic optical rules.
 
@@ -142,7 +153,7 @@ def _has_optical_issue(metadata: ImageMetadata) -> bool:
     ])
 
 
-def _has_software_issue(metadata: ImageMetadata) -> bool:
+def has_software_issue(metadata: ImageMetadata) -> bool:
     """
     Detects traces of known image editing software in metadata.
 
@@ -158,7 +169,7 @@ def _has_software_issue(metadata: ImageMetadata) -> bool:
     )
 
 
-def _has_virtual_device_issue(metadata: ImageMetadata) -> bool:
+def has_virtual_device_issue(metadata: ImageMetadata) -> bool:
     """
     Detects signatures of emulators or virtual devices in the hardware metadata.
 
@@ -174,9 +185,24 @@ def _has_virtual_device_issue(metadata: ImageMetadata) -> bool:
     )
 
 
+def has_temporal_issue(metadata: ImageMetadata) -> bool:
+    """
+    Detects chronological contradictions between capture time and modification time.
 
+    Args:
+        metadata (ImageMetadata): Image metadata.
 
+    Returns:
+        bool: True if the modification date is earlier than the capture date.
+    """
 
+    capture_date = parse_date(metadata.datetime)
+    modify_date = parse_date(metadata.modify_date)
+
+    if None in {capture_date, modify_date}:
+        return False
+
+    return modify_date < capture_date
 
 
 def _is_daytime(date: Optional[str]) -> bool:
