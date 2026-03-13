@@ -136,6 +136,12 @@ class PhotoAnalyzer:
             if None in {prev.device, curr.device}:
                 continue
 
+            if None in {
+                prev.latitude, prev.longitude,
+                curr.latitude, curr.longitude
+            }:
+                continue
+
             if prev.device != curr.device:
                 switches.append({
                         "from_file": prev.filename,
