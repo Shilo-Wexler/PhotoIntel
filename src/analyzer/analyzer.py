@@ -24,7 +24,7 @@ from datetime import datetime
 from typing import Optional
 
 import constants
-import src.forensic_rules as rules
+from . import forensic_rules as rules
 from src.converters import parse_date
 from src.models import ImageMetadata, ImageRiskProfile, CollectionInsights
 

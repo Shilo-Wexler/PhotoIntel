@@ -1,6 +1,5 @@
-import pytest
 from src.models import ImageMetadata
-import src.forensic_rules as rules
+import analyzer.forensic_rules as rules
 import src.constants as constants
 
 constants.AI_SOFTWARE = {"stablediffusion", "midjourney"}

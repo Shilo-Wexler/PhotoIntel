@@ -20,7 +20,7 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 
 import constants
-import extractor_utils as utils
+from . import extractor_utils as utils
 from models import ImageMetadata
 
 

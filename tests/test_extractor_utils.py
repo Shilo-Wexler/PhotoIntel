@@ -1,5 +1,5 @@
 import unittest
-from extractor_utils import (
+from extractor.extractor_utils import (
     has_gps, latitude, longitude, altitude,
     extract_timestamp, camera_make, camera_model,
     software_info, modification_date, exposure_stats, direction

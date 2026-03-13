@@ -2,11 +2,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from extractor import get_image_data, extract_metadata, extract_all, RawImageData
+from src.extractor.extractor import get_image_data, extract_metadata, extract_all, RawImageData
 
 
 class TestExtractor(unittest.TestCase):
-    @patch("extractor.Image.open")
+    @patch("src.extractor.extractor.Image.open")
     def test_get_image_data_success(self, mock_open):
         mock_img = MagicMock()
         mock_img.__enter__.return_value = mock_img
@@ -22,7 +22,7 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(result.height, 200)
         self.assertEqual(result.exif, {"Make": "Canon"})
 
-    @patch("extractor.Image.open")
+    @patch("src.extractor.extractor.Image.open")
     def test_get_image_data_failure(self, mock_open):
         mock_open.side_effect = Exception("bad image")
 
@@ -32,7 +32,7 @@ class TestExtractor(unittest.TestCase):
         self.assertIsNone(result.width)
         self.assertIsNone(result.height)
 
-    @patch("extractor.get_image_data")
+    @patch("src.extractor.extractor.get_image_data")
     def test_extract_metadata_no_exif(self, mock_data):
         mock_data.return_value = RawImageData(
             exif=None,
@@ -47,7 +47,7 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(metadata.pixel_height, 200)
         self.assertFalse(metadata.has_exif)
 
-    @patch("extractor.get_image_data")
+    @patch("src.extractor.extractor.get_image_data")
     def test_extract_metadata_with_exif(self, mock_data):
         mock_data.return_value = RawImageData(
             exif={},
@@ -65,9 +65,9 @@ class TestExtractor(unittest.TestCase):
 
         self.assertEqual(result, [])
 
-    @patch("extractor.extract_metadata")
-    @patch("extractor.Path.rglob")
-    @patch("extractor.Path.is_dir")
+    @patch("src.extractor.extractor.extract_metadata")
+    @patch("src.extractor.extractor.Path.rglob")
+    @patch("src.extractor.extractor.Path.is_dir")
     def test_extract_all_success(self, mock_is_dir, mock_rglob, mock_extract):
         mock_is_dir.return_value = True
 
@@ -82,4 +82,3 @@ class TestExtractor(unittest.TestCase):
         result = extract_all("folder")
 
         self.assertEqual(len(result), 1)
-

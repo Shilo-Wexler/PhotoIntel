@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime
 from src.models import ImageMetadata
 from src import constants
-from src.analyzer import PhotoAnalyzer
+from analyzer.analyzer import PhotoAnalyzer
 
 # Mock constants to run tests independently
 constants.CLUSTER_RADIUS_KM = 1.0
