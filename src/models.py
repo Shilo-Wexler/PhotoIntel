@@ -70,7 +70,6 @@ class ImageRiskProfile:
     optical_issue: bool = False
     ai_issue: bool = False
 
-
 @dataclass
 class CollectionInsights:
     """
@@ -95,4 +94,5 @@ class CollectionInsights:
 
     location_clusters: list[dict] = field(default_factory=list)
     teleportation_incidents: list[dict] = field(default_factory=list)
+    device_timeline_switches: list[dict] = field(default_factory=list)
 

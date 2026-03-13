@@ -111,7 +111,9 @@ def parse_date(date: Any)->Optional[datetime]:
 
     formats = [
         "%Y:%m:%d %H:%M:%S",
-        "%Y-%m-%d %H:%M:%S"
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y/%m/%d %H:%M:%S",
     ]
 
     for fmt in formats:
@@ -119,5 +121,8 @@ def parse_date(date: Any)->Optional[datetime]:
             return datetime.strptime(date, fmt)
         except (ValueError, TypeError):
             continue
-    return None
 
+    try:
+        return datetime.fromisoformat(date)
+    except ValueError:
+        return None

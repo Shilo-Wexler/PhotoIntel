@@ -47,9 +47,23 @@ VIRTUAL_DEVICE = {
     'genymotion', 'bluestacks', 'qemu', 'nox', 'memu', 'vbox', 'virtualbox'
 }
 
-# --- AI Specific Constants ---
+# --- AI & Geometry Specific Constants ---
 AI_MODULO = 64                    # Math signature of Diffusion models
 AI_RESOLUTIONS = {512, 1024}      # Common AI square output sizes
+
+# Standard aspect ratios in photography (4:3, 3:2, 16:9, 1:1 and their portraits)
+# We use a set of rounded floats for fast lookup.
+STANDARD_ASPECT_RATIOS = {
+    1.0,    # Square (AI-heavy, but technically a format)
+    1.33,   # 4:3 (Most Smartphones)
+    0.75,   # 3:4 (Portrait Smartphone)
+    1.5,    # 3:2 (DSLR / Mirrorless)
+    0.67,   # 2:3 (Portrait Professional)
+    1.78,   # 16:9 (Wide / Video)
+    0.56    # 9:16 (Story / Social)
+}
+
+
 
 # --- Supported File Extensions --
 SUPPORTED_EXTENSIONS = {

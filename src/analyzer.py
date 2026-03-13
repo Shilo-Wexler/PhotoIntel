@@ -1,5 +1,21 @@
 """
+Forensic Photo Analyzer Module
+------------------------------
+The central analytical engine of the system, engineered to transform raw
+image metadata into high-fidelity forensic insights.
 
+Key Capabilities:
+    1. Individual Risk Assessment: Cross-references metadata against forensic rules
+       (AI, GPS, Software, Device, and Altitude anomalies) to evaluate evidentiary integrity.
+    2. Temporal Alignment: Sorts and aligns profiles on a chronological baseline
+       to reconstruct the collection's timeline.
+    3. Spatial-Temporal Auditing: Detects physically impossible travel and identifies
+       geographic hotspots through clustering.
+    4. Device Chain-of-Custody Mapping: Tracks device transitions across the
+       timeline to identify multi-source origins and facilitate trajectory visualization.
+
+This module serves as the primary intelligence layer between raw ingestion
+and comprehensive forensic reporting.
 """
 
 import math
@@ -41,7 +57,6 @@ class PhotoAnalyzer:
             CollectionInsights: A comprehensive forensic report containing statistical totals,
                 risk distributions, and detected anomalies across the entire dataset.
         """
-
         profiles = [self.evaluate_image(img) for img
                     in self.images_data]
 
@@ -68,6 +83,7 @@ class PhotoAnalyzer:
 
         insights.location_clusters = self._compute_location_clusters(profiles)
         insights.teleportation_incidents = self._get_teleportation_incidents(profiles)
+        insights.device_timeline_switches = self._get_device_switches(profiles)
 
         return insights
 
@@ -81,7 +97,6 @@ class PhotoAnalyzer:
         Returns:
             List of dictionaries containing detected velocity anomalies and spatial data.
         """
-
         incidents = []
 
         for i in range(1, len(profiles)):
@@ -99,6 +114,42 @@ class PhotoAnalyzer:
 
         return incidents
 
+    @staticmethod
+    def _get_device_switches(profiles: list[ImageRiskProfile]) -> list[dict]:
+        """
+        Identifies device transition points across the sorted image timeline.
+
+        Detects consecutive image pairs captured by different devices and maps
+        the spatial-temporal bridge between them, providing a baseline for
+        multi-source collection mapping.
+
+        Returns:
+            List[dict]: Events containing source/target filenames, device names,
+                       and coordinate pairs for trajectory visualization.
+        """
+
+        switches = []
+
+        for i in range(1, len(profiles)):
+            prev, curr = profiles[i-1], profiles[i]
+
+            if None in {prev.device, curr.device}:
+                continue
+
+            if prev.device != curr.device:
+                switches.append({
+                        "from_file": prev.filename,
+                        "to_file": curr.filename,
+                        "from_device": prev.device,
+                        "to_device": curr.device,
+                        "coords": [
+                            (prev.latitude, prev.longitude),
+                            (curr.latitude, curr.longitude)
+                            ]
+                })
+
+        return switches
+
     def _compute_location_clusters(self, profiles: list[ImageRiskProfile]) -> list[dict]:
         """
         Groups images into geographic hotspots based on spatial proximity.
@@ -109,7 +160,6 @@ class PhotoAnalyzer:
         Returns:
             A list of clusters sorted by image density (descending).
         """
-
         clusters = []
 
         gps_data = [profile for profile in profiles
@@ -155,7 +205,6 @@ class PhotoAnalyzer:
             ImageRiskProfile: A structured profile containing risk flags and
                 processed data for report generation.
         """
-
         if not image.has_exif:
             return ImageRiskProfile(
                 filename=image.filename,
@@ -208,7 +257,6 @@ class PhotoAnalyzer:
         Returns:
             A dictionary of incident details if a violation is detected, else None.
         """
-
         dist_km = self._calculate_distance(
             prev.latitude, prev.longitude,
             curr.latitude, curr.longitude
@@ -271,7 +319,7 @@ class PhotoAnalyzer:
         return constants.EARTH_RADIUS_KM * c
 
     @staticmethod
-    def _build_device_name(image: ImageMetadata) -> str:
+    def _build_device_name(image: ImageMetadata) -> Optional[str]:
         """
         Generates a clean, unified device identifier.
 
@@ -283,14 +331,19 @@ class PhotoAnalyzer:
                 camera_make and camera_model fields.
 
         Returns:
-            str: A formatted string combining make and model, or "Unknown Device"
+            str: A formatted string combining make and model, or None
                 if no data is available.
         """
-        make = (image.camera_make or '').strip()
-        model = (image.camera_model or '').strip()
+        make = image.camera_make
+        model = image.camera_model
 
-        if make.lower() in model.lower():
-            return model
+        if make is None and model is None:
+            return None
 
-        return (f"{make} {model}".strip() or
-                constants.UNKNOWN_DEVICE)
+        if make and model:
+            return (model if make.lower() in model.lower()
+                    else f"{make} {model}".strip())
+
+        device_name = make or model
+
+        return device_name if device_name else None

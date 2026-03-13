@@ -35,8 +35,14 @@ def is_ai_generated(metadata: ImageMetadata) -> bool:
     w, h = metadata.pixel_width, metadata.pixel_height
 
     if w and h:
-       return ((w == h and w in constants.AI_RESOLUTIONS)
-            or (w % constants.AI_MODULO == 0 and h % constants.AI_MODULO == 0))
+       if ((w == h and w in constants.AI_RESOLUTIONS)
+            or (w % constants.AI_MODULO == 0 and h % constants.AI_MODULO == 0)):
+           return True
+
+    ratio = round(w/h, 2)
+
+    if ratio not in constants.STANDARD_ASPECT_RATIOS and not metadata.has_exif:
+        return True
 
     return False
 
