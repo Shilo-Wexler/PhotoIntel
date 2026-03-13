@@ -1,217 +1,151 @@
 """
-PhotoIntel - Core Extraction Module 
-Engine for extracting EXIF metadata and
-geographic information from images.
+Metadata Extraction Engine
+--------------------------
+This module serves as the Ingestion Layer of the forensic system.
+It is responsible for:
+1. Orchestrating recursive directory scans for image assets.
+2. Filtering files based on supported forensic formats.
+3. Extracting and normalizing raw EXIF data into structured DTOs (ImageMetadata).
 
-This module is part of the PhotoIntel
-visual information system.
-Supports GPS coordinates, devices 
-metadata, and timestamp extraction.
+The engine leverages 'extractor_utils.py' for granular data parsing and
+sanitization, ensuring that only clean, type-safe data reaches the Analysis Layer.
 """
+
+import logging
+from pathlib import Path
+from typing import Optional
+from dataclasses import dataclass
+
 from PIL import Image
 from PIL.ExifTags import TAGS
-from pathlib import Path
-import logging
+
+import constants
+import extractor_utils as utils
+from models import ImageMetadata
+
+
 
 logger = logging.getLogger(__name__)
 
-#---Utility Functions ---
 
 
-def sanitize_string(val):
+@dataclass
+class RawImageData:
+    exif: Optional[dict] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+
+
+def get_image_data(image_path: Path) -> RawImageData:
     """
-    Remove null bytes and whitespace
-    from string values.
+    Safely opens an image file and retrieves its raw EXIF data and dimensions.
 
     Args:
-        val: The value to clean.
-    Returns:
-        The cleaned string or the original value if not a string.
-    """
-    if isinstance(val, str):
-        return val.strip(' \x00\t\n\r').strip()
-    return val
-
-
-def to_float(value):
-    """
-    Convert EXIF numeric or Rational
-    values to float, returning None on failure.
-    """
-    try:
-        if hasattr(value, 'numerator') and hasattr(value, 'denominator'):
-            return float(value.numerator) / float(value.denominator)
-        return float(value)
-    except (TypeError, ZeroDivisionError, AttributeError):
-        return None
-
-
-def dms_to_decimal(dms_tuple, ref):
-    """
-    Converts coordinates from DMS (Degrees, Minutes, and Seconds) format to decimal degrees.
-
-    Args:
-        dms_tuple (tuple): A tuple containing Degrees, Minutes, and Seconds.
-        ref (str): Geographic reference direction (N, S, E, W).
+        image_path (Path): The pathlib.Path object pointing to the image.
 
     Returns:
-        float: The decimal degree value (negative for S/W references), or None if invalid.
+        RawImageData: A data object containing the raw EXIF dictionary, width, and height.
+                      If extraction fails, returns an empty RawImageData instance
+                      with all fields set to None.
     """
-
-    negative_refs = {'S', b'S', 'W', b'W'}
-    positive_refs = {'N', b'N', 'E', b'E'}
-    refs = negative_refs | positive_refs
-
-    if None in {dms_tuple, ref} or len(dms_tuple) < 3 or ref not in refs:
-        return None
-
-    degrees = to_float(dms_tuple[0])
-    minutes = to_float(dms_tuple[1])
-    seconds = to_float(dms_tuple[2])
-
-    if None in {degrees, minutes, seconds}:
-        return None
-
-    decimal = degrees + (minutes / 60) + (seconds / 3600)
-
-    if ref in negative_refs:
-        decimal = -decimal
-    return decimal
-
-
-def has_gps(exif_data: dict):
-    """
-    Checks if GPS information is
-    present in the metadata dictionary.
-    """
-    return "GPSInfo" in exif_data
-
-
-def latitude(exif_data: dict):
-    """
-    Extract latitude from the EXIF
-    data dictionary.
-    """
-    gps_info = exif_data.get("GPSInfo")
-    if isinstance(gps_info, dict) and 2 in gps_info:
-        return dms_to_decimal(gps_info[2], gps_info.get(1))
-    return None
-
-
-def longitude(exif_data: dict):
-    """
-    Extract longitude from the EXIF
-    data dictionary.
-    """
-    gps_info = exif_data.get("GPSInfo")
-    if isinstance(gps_info, dict) and 4 in gps_info:
-        return dms_to_decimal(gps_info[4], gps_info.get(3))
-    return None
-
-
-def extract_timestamp(exif_data: dict):
-    """
-    Extract the best available
-    timestamp from the metadata.
-    """
-    dt = exif_data.get("DateTimeOriginal") or exif_data.get("DateTime")
-    return str(dt) if dt else None
-
-
-def camera_make(exif_data: dict):
-    """
-    Retrieves the camera manufacturer
-    from EXIF data.
-    """
-    return exif_data.get("Make")
-
-
-def camera_model(exif_data: dict):
-    """
-    Retrieves the camera model name
-    from EXIF data.
-    """
-    return exif_data.get("Model")
-
-
-def extract_metadata(image_path):
-    """
-    Extracts EXIF metadata from a single
-    image and organizes it into a dictionary.
-        Args:
-             image_path(str): The full path to
-             the image file.
-        Returns:
-            dict: A dictionary containing
-            filename, datetime, GPS, and device info.
-    """
-    path = Path(image_path)
 
     try:
         with Image.open(image_path) as img:
-            # noinspection PyProtectedMember
-            exif = img._getexif()
-    # noinspection PyBroadException
+            return RawImageData(
+                # noinspection PyProtectedMember
+                exif = img._getexif(),
+                width = img.width,
+                height= img.height
+            )
     except Exception as e:
         logger.error(f"Failed to process {image_path}: {e}")
-        exif = None
 
-    if exif is None:
-        return {
-        "filename": path.name,
-        "datetime": None,
-        "latitude": None,
-        "longitude": None,
-        "camera_make": None,
-        "camera_model": None,
-        "has_gps": False
-        }
-
-    data = {}
-    for tag_id, value in exif.items():
-        tag = TAGS.get(tag_id, tag_id)
-        data[tag] = value
+        return RawImageData()
 
 
-    exif_dict = {
-        "filename": path.name,
-        "datetime": sanitize_string(extract_timestamp(data)),
-        "latitude": latitude(data),
-        "longitude": longitude(data),
-        "camera_make": sanitize_string(camera_make(data)),
-        "camera_model": sanitize_string(camera_model(data)),
-        "has_gps": has_gps(data)
-    }
-    return exif_dict
-
-
-def extract_all(folder_path):
+def extract_metadata(image_path: str) -> ImageMetadata:
     """
-    Recursively scans a directory and
-    extracting metadata from all supported
-    images.
-        Args:
-            folder_path (str): Path to the
-    source directory for analysis.
-        Returns:
-            list: A list of dictionaries, one
-    for each successfully processed image.
+    Extracts and normalizes metadata from a single image file.
+
+    Performs validation, raw EXIF extraction, and maps sanitized values
+    into a structured ImageMetadata DTO.
+
+    Args:
+        image_path (str): Absolute or relative path to the image.
+
+    Returns:
+        ImageMetadata: Structured metadata object
     """
+
+    path = Path(image_path)
+    raw_data = get_image_data(path)
+
+    if not raw_data.exif:
+        return ImageMetadata(
+            filename=path.name,
+            full_path=str(path.resolve()),
+            pixel_width=raw_data.width,
+            pixel_height=raw_data.height
+        )
+
+    raw_tags = {TAGS.get(tag_id, tag_id): value for tag_id, value in raw_data.exif.items()}
+
+    exp = utils.exposure_stats(raw_tags)
+
+    return ImageMetadata(
+    filename = path.name,
+    full_path = str(path.resolve()),
+    has_exif = True,
+    has_gps = utils.has_gps(raw_tags),
+    datetime = utils.extract_timestamp(raw_tags),
+    latitude = utils.latitude(raw_tags),
+    longitude = utils.longitude(raw_tags),
+    camera_make = utils.camera_make(raw_tags),
+    camera_model = utils.camera_model(raw_tags),
+    software = utils.software_info(raw_tags),
+    modify_date = utils.modification_date(raw_tags),
+    altitude = utils.altitude(raw_tags),
+    direction = utils.direction(raw_tags),
+    exposure_time = exp.get('exposure_time'),
+    iso = exp.get('iso'),
+    f_number = exp.get('f_number'),
+    pixel_width=raw_data.width,
+    pixel_height=raw_data.height
+
+
+
+    )
+
+
+
+def extract_all(folder_path: str) -> list[ImageMetadata]:
+    """
+    Recursively scans a directory for supported image files and extracts their metadata.
+
+    Only files with extensions listed in 'constants.SUPPORTED_EXTENSIONS' are processed,
+    ensuring type-safe, clean data for downstream analysis.
+
+    Args:
+        folder_path (str): Root directory to start the recursive scan.
+
+    Returns:
+        list[ImageMetadata]: Metadata objects for all successfully processed images.
+                             Returns an empty list if the path is invalid or no supported files are found.
+    """
+
     results = []
     base_path = Path(folder_path)
-    supported_extensions = {
-        '.jpg', '.jpeg', '.png', '.gif', '.webp',
-        '.bmp', '.svg', '.tiff', '.tif', '.ico',
-        '.heif', '.avif', '.apng', '.jfif'
-    }
+
     if not base_path.is_dir():
         return results
+
+    supported = constants.SUPPORTED_EXTENSIONS
+
     for file_path in base_path.rglob("*"):
-        if file_path.is_file() and file_path.suffix.lower() in supported_extensions:
+        if file_path.is_file() and file_path.suffix.lower() in supported:
             try:
                 metadata = extract_metadata(str(file_path))
                 results.append(metadata)
             except Exception as e:
                 logger.error(f"Failed to process {file_path}: {e}")
-                continue
     return results
