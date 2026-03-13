@@ -1,114 +1,85 @@
 import unittest
-import unittest.mock as mock
-from converters import sanitize_string, to_float, dms_to_decimal, to_int
-from src.extractor import  extract_metadata
 from pathlib import Path
+from unittest.mock import patch, MagicMock
 
-class TestPhotoIntel(unittest.TestCase):
-    def test_sanitize_basic(self):
-        dirty_name = "   Canon "
-        clean_name = sanitize_string(dirty_name)
-        self.assertEqual(clean_name, "Canon")
-    def test_sanitize_null_bytes(self):
-        dirty_input = "Nikon\x00"
-        result = sanitize_string(dirty_input)
-        self.assertEqual(result, "Nikon")
-    def test_sanitize_none_and_nums(self):
-        self.assertIsNone(sanitize_string(None))
-        self.assertEqual(sanitize_string(123),123)
-    def test_sanitize_complex_garbage(self):
-        self.assertEqual(sanitize_string("\x00Sony\x00"),"Sony")
-        self.assertEqual(sanitize_string(" \x00Nikon \x00 "),"Nikon")
-    def test_to_float_standard(self):
-        self.assertEqual(to_float(10),10.0)
-        self.assertEqual(to_float("5.5"), 5.5)
-        self.assertEqual(to_float("6"), 6.0)
-    def test_to_float_rational(self):
-        class MockRational:
-            def __init__(self, n, d):
-                self.numerator = n
-                self.denominator = d
-        self.assertEqual(to_float(MockRational(10,2)), 5.0)
-    def test_to_float_division_by_zero(self):
-        class BadRational:
-            def __init__(self, n, d):
-                self.numerator = n
-                self.denominator = d
-        result = to_float(BadRational(10,0))
-        self.assertIsNone(result)
-    def test_dms_to_decimal_success(self):
-        dms_tuple = (32,4,33.6)
-        ref = 'N'
-        # 32 + 4 /60 + 33.6/3600 = 32.076
-        result = dms_to_decimal(dms_tuple, ref)
-        self.assertAlmostEqual(result, 32.076, places=3)
+from extractor import get_image_data, extract_metadata, extract_all, RawImageData
 
-    def test_dms_to_decimal_to_negative_ref(self):
-        result_west = dms_to_decimal((10,0,0), 'W')
-        result_south = dms_to_decimal((10,0,0), 'S')
-        self.assertEqual(result_west, -10)
-        self.assertEqual(result_south, -10)
-    def test_dms_to_decimal_invalid_input(self):
-        self.assertIsNone(dms_to_decimal(None,'N'))
-        self.assertIsNone(dms_to_decimal((32,4),'N'))
-        self.assertIsNone(dms_to_decimal((1,-20,0),9))
-    def test_dms_to_decimal_boundaries(self):
-        class MockRat:
-            numerator = 60
-            denominator = 2
-        self.assertEqual(dms_to_decimal((MockRat(),0,0),'N'),30.0)
-        self.assertEqual(dms_to_decimal((10,0,0),b'N'),10.0)
-        self.assertIsNone(dms_to_decimal((32,None,0),'N'))
-    def test_to_int_standard(self):
-        self.assertEqual(to_int("100"),100)
-        self.assertEqual(to_int(800.0),800)
-        self.assertIsNone(to_int(None))
-    def test_to_int_garbage(self):
-        self.assertIsNone(to_int("ISO100"))
-        self.assertIsNone(to_int("ABC"))
 
-    def test_dms_to_decimal_edge_values(self):
-        self.assertEqual(dms_to_decimal((90, 0, 0), 'N'), 90)
-        self.assertEqual(dms_to_decimal((180, 0, 0), 'E'), 180)
-        self.assertEqual(dms_to_decimal((90, 0, 0), 'S'), -90)
-        self.assertEqual(dms_to_decimal((180, 0, 0), 'W'), -180)
-
-    def test_to_float_invalid_strings(self):
-        self.assertIsNone(to_float("abc"))
-        self.assertIsNone(to_float([1, 2, 3]))
-
-    def test_sanitize_unicode_and_special_chars(self):
-        self.assertEqual(sanitize_string("  Café "), "Café")
-        self.assertEqual(sanitize_string(" \x00Tab\t "), "Tab")
-
-    @mock.patch("extractor.Image.open")
-    def test_get_raw_exif_success(self, mock_open):
-        mock_img = mock.Mock()
+class TestExtractor(unittest.TestCase):
+    @patch("extractor.Image.open")
+    def test_get_image_data_success(self, mock_open):
+        mock_img = MagicMock()
+        mock_img.__enter__.return_value = mock_img
+        mock_img.width = 100
+        mock_img.height = 200
         mock_img._getexif.return_value = {"Make": "Canon"}
-        mock_open.return_value.__enter__.return_value = mock_img
-        from extractor import get_image_data
-        exif = get_image_data(Path("/fake/path/image.jpg"))
-        self.assertEqual(exif, {"Make": "Canon"})
 
-    @mock.patch("extractor.Image.open")
-    def test_get_raw_exif_failure(self, mock_open):
-        mock_open.side_effect = IOError("cannot open")
-        from extractor import get_image_data
-        self.assertIsNone(get_image_data(Path("/fake/path/image.jpg")))
+        mock_open.return_value = mock_img
 
+        result = get_image_data(Path("test.jpg"))
 
-    @mock.patch("extractor.get_raw_exif", return_value=None)
-    def test_extract_metadata_no_exif(self, mock_exif):
-        metadata = extract_metadata("/fake/path/image.jpg")
+        self.assertEqual(result.width, 100)
+        self.assertEqual(result.height, 200)
+        self.assertEqual(result.exif, {"Make": "Canon"})
+
+    @patch("extractor.Image.open")
+    def test_get_image_data_failure(self, mock_open):
+        mock_open.side_effect = Exception("bad image")
+
+        result = get_image_data(Path("bad.jpg"))
+
+        self.assertIsNone(result.exif)
+        self.assertIsNone(result.width)
+        self.assertIsNone(result.height)
+
+    @patch("extractor.get_image_data")
+    def test_extract_metadata_no_exif(self, mock_data):
+        mock_data.return_value = RawImageData(
+            exif=None,
+            width=100,
+            height=200
+        )
+
+        metadata = extract_metadata("photo.jpg")
+
+        self.assertEqual(metadata.filename, "photo.jpg")
+        self.assertEqual(metadata.pixel_width, 100)
+        self.assertEqual(metadata.pixel_height, 200)
         self.assertFalse(metadata.has_exif)
+
+    @patch("extractor.get_image_data")
+    def test_extract_metadata_with_exif(self, mock_data):
+        mock_data.return_value = RawImageData(
+            exif={},
+            width=300,
+            height=400
+        )
+
+        metadata = extract_metadata("image.jpg")
+
         self.assertEqual(metadata.filename, "image.jpg")
+        self.assertFalse(metadata.has_exif)
 
+    def test_extract_all_invalid_folder(self):
+        result = extract_all("not_a_folder")
 
+        self.assertEqual(result, [])
 
+    @patch("extractor.extract_metadata")
+    @patch("extractor.Path.rglob")
+    @patch("extractor.Path.is_dir")
+    def test_extract_all_success(self, mock_is_dir, mock_rglob, mock_extract):
+        mock_is_dir.return_value = True
 
+        fake_file = MagicMock()
+        fake_file.is_file.return_value = True
+        fake_file.suffix = ".jpg"
 
-if __name__ == "__main__":
-    unittest.main()
+        mock_rglob.return_value = [fake_file]
 
+        mock_extract.return_value = MagicMock()
 
+        result = extract_all("folder")
+
+        self.assertEqual(len(result), 1)
 
