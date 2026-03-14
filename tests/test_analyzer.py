@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from src.models import ImageMetadata
+from src.models.raw import ImageMetadata
 from src import constants
 from analyzer.analyzer import PhotoAnalyzer
 

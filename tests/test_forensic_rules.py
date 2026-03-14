@@ -1,25 +1,26 @@
-from src.models import ImageMetadata
-import analyzer.forensic_rules as rules
-import src.constants as constants
+from src.models.raw import ImageMetadata
+import src.analyzer.forensic_rules as rules
+import src.constants.geo_constants as geo
+import src.constants.forensic_constants as fc
 
-constants.AI_SOFTWARE = {"stablediffusion", "midjourney"}
-constants.AI_RESOLUTIONS = {512, 1024, 2048}
-constants.AI_MODULO = 64
-constants.STANDARD_ASPECT_RATIOS = {1.33, 1.5, 1.78}
-constants.HIGH_ISO = 3200
-constants.LONG_EXPOSURE = 15
-constants.LOW_NIGHT_F_STOP = 2.0
-constants.MIN_HIGH_ISO = 1600
-constants.DAY_START = 7
-constants.DAY_END = 19
-constants.EDITING_SOFTWARE = {"photoshop", "lightroom"}
-constants.VIRTUAL_DEVICE = {"virtualcam", "emulator"}
-constants.MAX_ALTITUDE = 8000
-constants.MIN_ALTITUDE = -450
-constants.EARTH_MIN_LAT = -90
-constants.EARTH_MAX_LAT = 90
-constants.EARTH_MIN_LON = -180
-constants.EARTH_MAX_LON = 180
+fc.AI_SOFTWARE = {"stablediffusion", "midjourney"}
+fc.AI_RESOLUTIONS = {512, 1024, 2048}
+geo.AI_MODULO = 64
+fc.STANDARD_ASPECT_RATIOS = {1.33, 1.5, 1.78}
+fc.HIGH_ISO = 3200
+fc.LONG_EXPOSURE = 15
+fc.LOW_NIGHT_F_STOP = 2.0
+fc.MIN_HIGH_ISO = 1600
+fc.DAY_START = 7
+fc.DAY_END = 19
+fc.EDITING_SOFTWARE = {"photoshop", "lightroom"}
+fc.VIRTUAL_DEVICE = {"virtualcam", "emulator"}
+geo.MAX_ALTITUDE = 8000
+geo.MIN_ALTITUDE = -450
+geo.EARTH_MIN_LAT = -90
+geo.EARTH_MAX_LAT = 90
+geo.EARTH_MIN_LON = -180
+geo.EARTH_MAX_LON = 180
 
 
 class TestForensicRules:

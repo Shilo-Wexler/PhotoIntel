@@ -10,8 +10,7 @@ Designed to fail gracefully by returning None on missing or malformed data.
 
 from typing import Optional
 
-
-from converters import dms_to_decimal, sanitize_string, to_float, to_int
+from src.converters import dms_to_decimal, sanitize_string, to_float, to_int
 
 
 

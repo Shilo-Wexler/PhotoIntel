@@ -1,8 +1,15 @@
+"""
+Data Conversion & Normalization Utility.
+Standardizes raw EXIF data into typed Python objects while
+providing a safety layer against malformed or corrupt metadata.
+"""
 
-
-from typing import Optional, Any
+import logging
 from datetime import datetime
+from typing import Any, Optional
 
+
+logger = logging.getLogger(__name__)
 
 
 def sanitize_string(val: Any) -> Any:
@@ -15,6 +22,13 @@ def sanitize_string(val: Any) -> Any:
     Returns:
         Any: Cleaned string if input was string , otherwise returns the original value.
     """
+    if isinstance(val, bytes):
+        try:
+            return val.decode('utf-8', errors='replace').strip(' \x00\t\n\r')
+        except UnicodeDecodeError:
+            return val
+        except Exception as e:
+            logger.warning(f"Failed to decode bytes metadata: {e}")
 
     if isinstance(val, str):
         return val.strip(' \x00\t\n\r')
@@ -114,6 +128,7 @@ def parse_date(date: Any)->Optional[datetime]:
         "%Y-%m-%dT%H:%M:%S",
         "%Y-%m-%d %H:%M:%S",
         "%Y/%m/%d %H:%M:%S",
+        "%d.%m.%Y %H:%M:%S",
     ]
 
     for fmt in formats:

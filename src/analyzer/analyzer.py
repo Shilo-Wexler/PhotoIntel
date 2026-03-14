@@ -18,15 +18,17 @@ This module serves as the primary intelligence layer between raw ingestion
 and comprehensive forensic reporting.
 """
 
-import math
 import datetime
+import math
 from datetime import datetime
 from typing import Optional
 
-import constants
-from . import forensic_rules as rules
+from src.analyzer import forensic_rules as rules
+from src.constants import geo_constants as geo
 from src.converters import parse_date
-from src.models import ImageMetadata, ImageRiskProfile, CollectionInsights
+from src.models.collection import CollectionInsights
+from src.models.raw import ImageMetadata
+from src.models.risk import ImageRiskProfile
 
 
 class PhotoAnalyzer:
@@ -60,8 +62,7 @@ class PhotoAnalyzer:
         profiles = [self.evaluate_image(img) for img
                     in self.images_data]
 
-        profiles.sort(key=lambda p:
-        p.timestamp or datetime.min)
+        profiles.sort(key=lambda p: p.timestamp or datetime.min)
 
         insights = CollectionInsights(profiles)
 
@@ -99,18 +100,16 @@ class PhotoAnalyzer:
         """
         incidents = []
 
-        for i in range(1, len(profiles)):
-            prev, curr = profiles[i - 1], profiles[i]
+        valid_profiles = [p for p in profiles
+            if None not in {p.latitude, p.longitude, p.timestamp}
+        ]
 
-            if None not in {
-                prev.latitude, prev.longitude,
-                prev.timestamp, curr.timestamp,
-                curr.latitude, curr.longitude
-            }:
-                result = self._detect_teleportation(prev, curr)
+        for i in range(1, len(valid_profiles)):
+            prev, curr = valid_profiles[i - 1], valid_profiles[i]
 
-                if result:
-                    incidents.append(result)
+            result = self._detect_teleportation(prev, curr)
+            if result:
+                incidents.append(result)
 
         return incidents
 
@@ -181,7 +180,7 @@ class PhotoAnalyzer:
                     cluster['lat'], cluster['lon']
                 )
 
-                if distance <= constants.CLUSTER_RADIUS_KM:
+                if distance <= geo.CLUSTER_RADIUS_KM:
                     cluster['count'] += 1
                     added_to_clusters = True
 
@@ -263,6 +262,13 @@ class PhotoAnalyzer:
         Returns:
             A dictionary of incident details if a violation is detected, else None.
         """
+        if None in {
+            prev.timestamp, curr.timestamp,
+            prev.latitude, curr.latitude,
+            prev.longitude, curr.longitude
+        }:
+            return None
+
         dist_km = self._calculate_distance(
             prev.latitude, prev.longitude,
             curr.latitude, curr.longitude
@@ -272,14 +278,17 @@ class PhotoAnalyzer:
             (curr.timestamp - prev.timestamp).total_seconds()
         )
 
-        if time_diff_sec < constants.MIN_TIME_DIFF_SEC:
+        if time_diff_sec < geo.MIN_TIME_DIFF_SEC:
             return None
 
         time_diff_hours = time_diff_sec / 3600
 
+        if time_diff_hours == 0:
+            return None
+
         speed_km = dist_km / time_diff_hours
 
-        if speed_km > constants.MAX_SPEED_KMH:
+        if speed_km > geo.MAX_SPEED_KMH:
             return {
                 "from_file": prev.filename,
                 "to_file": curr.filename,
@@ -322,7 +331,7 @@ class PhotoAnalyzer:
 
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
-        return constants.EARTH_RADIUS_KM * c
+        return geo.EARTH_RADIUS_KM * c
 
     @staticmethod
     def _build_device_name(image: ImageMetadata) -> Optional[str]:

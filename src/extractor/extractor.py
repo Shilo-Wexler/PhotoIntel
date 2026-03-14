@@ -19,9 +19,9 @@ from dataclasses import dataclass
 from PIL import Image
 from PIL.ExifTags import TAGS
 
-import constants
+import src.constants.forensic_constants as fc
 from . import extractor_utils as utils
-from models import ImageMetadata
+from src.models.raw import ImageMetadata
 
 
 
@@ -51,9 +51,12 @@ def get_image_data(image_path: Path) -> RawImageData:
 
     try:
         with Image.open(image_path) as img:
+
+            # noinspection PyProtectedMember
+            raw_exif = img._getexif()
+
             return RawImageData(
-                # noinspection PyProtectedMember
-                exif = img._getexif(),
+                exif = raw_exif,
                 width = img.width,
                 height= img.height
             )
@@ -139,7 +142,7 @@ def extract_all(folder_path: str) -> list[ImageMetadata]:
     if not base_path.is_dir():
         return results
 
-    supported = constants.SUPPORTED_EXTENSIONS
+    supported = fc.SUPPORTED_EXTENSIONS
 
     for file_path in base_path.rglob("*"):
         if file_path.is_file() and file_path.suffix.lower() in supported:

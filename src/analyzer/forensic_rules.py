@@ -1,4 +1,3 @@
-
 """
 Forensic Rules Engine.
 
@@ -9,9 +8,10 @@ physical inconsistencies, and synthetic signatures in image metadata.
 
 from typing import Optional
 
-import src.constants as constants
+from src.constants import forensic_constants as fc
+from src.constants import geo_constants as geo
 from src.converters import parse_date
-from src.models import ImageMetadata
+from src.models.raw import ImageMetadata
 
 
 def is_ai_generated(metadata: ImageMetadata) -> bool:
@@ -26,7 +26,7 @@ def is_ai_generated(metadata: ImageMetadata) -> bool:
     """
 
     ai_in_fields = _check_text_signatures(
-        metadata, constants.AI_SOFTWARE
+        metadata, fc.AI_SOFTWARE
     )
 
     if ai_in_fields:
@@ -34,14 +34,16 @@ def is_ai_generated(metadata: ImageMetadata) -> bool:
 
     w, h = metadata.pixel_width, metadata.pixel_height
 
-    if w and h:
-       if ((w == h and w in constants.AI_RESOLUTIONS)
-            or (w % constants.AI_MODULO == 0 and h % constants.AI_MODULO == 0)):
-           return True
+    if not w or not h:
+        return False
+
+    if ((w == h and w in fc.AI_RESOLUTIONS)
+        or (w % fc.AI_MODULO == 0 and h % fc.AI_MODULO == 0)):
+        return True
 
     ratio = round(w/h, 2)
 
-    if ratio not in constants.STANDARD_ASPECT_RATIOS and not metadata.has_exif:
+    if ratio not in fc.STANDARD_ASPECT_RATIOS and not metadata.has_exif:
         return True
 
     return False
@@ -61,8 +63,8 @@ def is_altitude_anomaly(metadata: ImageMetadata) -> bool:
     if metadata.altitude is None:
         return False
 
-    too_high = metadata.altitude > constants.MAX_ALTITUDE
-    too_low = metadata.altitude < constants.MIN_ALTITUDE
+    too_high = metadata.altitude > geo.MAX_ALTITUDE
+    too_low = metadata.altitude < geo.MIN_ALTITUDE
 
     return too_high or too_low
 
@@ -88,18 +90,18 @@ def has_gps_issue(metadata: ImageMetadata) -> bool:
         return False
 
     is_lat_valid = (
-            constants.EARTH_MIN_LAT <=
+            geo.EARTH_MIN_LAT <=
             metadata.latitude <=
-            constants.EARTH_MAX_LAT
+            geo.EARTH_MAX_LAT
     )
 
     if not is_lat_valid:
         return True
 
     is_lon_valid = (
-            constants.EARTH_MIN_LON <=
+            geo.EARTH_MIN_LON <=
             metadata.longitude <=
-            constants.EARTH_MAX_LON
+            geo.EARTH_MAX_LON
     )
 
     if not is_lon_valid:
@@ -135,28 +137,14 @@ def has_optical_issue(metadata: ImageMetadata) -> bool:
     if not is_day:
         return False
 
-    high_iso_check = (
-                      iso is not None
-                      and iso >= constants.HIGH_ISO
-                      )
-
-    long_exp_check = (
-                      exp_t is not None
-                      and exp_t > constants.LONG_EXPOSURE
-                     )
-
+    high_iso_check = iso is not None and iso >= fc.HIGH_ISO
+    long_exp_check = exp_t is not None and exp_t > fc.LONG_EXPOSURE
     f_num_iso_check = (
-                      f_num is not None
-                      and f_num < constants.LOW_NIGHT_F_STOP
-                      and iso is not None
-                      and iso >= constants.MIN_HIGH_ISO
-                       )
+                      f_num is not None and f_num < fc.LOW_NIGHT_F_STOP and
+                      iso is not None and iso >= fc.MIN_HIGH_ISO
+    )
 
-    return any([
-        high_iso_check,
-        long_exp_check,
-        f_num_iso_check
-    ])
+    return any((high_iso_check, long_exp_check, f_num_iso_check))
 
 
 def has_software_issue(metadata: ImageMetadata) -> bool:
@@ -171,7 +159,7 @@ def has_software_issue(metadata: ImageMetadata) -> bool:
     """
 
     return _check_text_signatures(
-        metadata, constants.EDITING_SOFTWARE
+        metadata, fc.EDITING_SOFTWARE
     )
 
 
@@ -187,7 +175,7 @@ def has_virtual_device_issue(metadata: ImageMetadata) -> bool:
     """
 
     return _check_text_signatures(
-        metadata, constants.VIRTUAL_DEVICE
+        metadata, fc.VIRTUAL_DEVICE
     )
 
 
@@ -227,7 +215,7 @@ def _is_daytime(date: Optional[str]) -> bool:
     if not dt_obj:
         return False
 
-    return constants.DAY_START <= dt_obj.hour <= constants.DAY_END
+    return fc.DAY_START <= dt_obj.hour <= fc.DAY_END
 
 
 def _check_text_signatures(metadata: ImageMetadata, signatures: set) -> bool:
