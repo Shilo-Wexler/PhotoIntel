@@ -1,0 +1,253 @@
+/* =============================================================================
+   PhotoIntel â€” base.css
+   -----------------------------------------------------------------------------
+   Foundation layer: design tokens, reset, navigation, shared buttons,
+   screen layout system, and loading spinner.
+
+   Imported by all pages. Must be loaded first.
+============================================================================= */
+
+
+/* =============================================================================
+   1. Design Tokens & Variables
+============================================================================= */
+:root {
+    /* Colors */
+    --bg-primary:        #ffffff;
+    --bg-secondary:      #f5f5f7;
+    --text-primary:      #1d1d1f;
+    --text-secondary:    #86868b;
+    --accent-color:      #0071e3;
+
+    /* Navigation glass surfaces */
+    --glass-bg-fallback: #ffffff;
+    --glass-bg:          rgba(255, 255, 255, 0.85);
+
+    /* Layout */
+    --nav-height:           48px;
+    --border-radius-large:  18px;
+    --transition-standard:  all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* =============================================================================
+   2. Reset & Accessibility
+============================================================================= */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+
+/* =============================================================================
+   3. Navigation Bar
+   Transparent bar with floating glass pill logo and actions group.
+============================================================================= */
+.glass-nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: var(--nav-height);
+    background: transparent;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1024px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.logo {
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 8px 20px;
+    border-radius: 980px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.logo-text {
+    background: linear-gradient(90deg, #0071e3, #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.nav-actions {
+    list-style: none;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 6px 8px;
+    border-radius: 980px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =============================================================================
+   4. Buttons
+============================================================================= */
+
+/* Navigation text button */
+.btn-nav {
+    background: none;
+    border: none;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: var(--transition-standard);
+    text-decoration: none;
+}
+
+.btn-nav:hover {
+    color: var(--accent-color);
+    opacity: 0.8;
+}
+
+/* Back arrow â€” used across all screens */
+.btn-icon-back {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    font-size: 15px;
+    cursor: pointer;
+    padding: 8px 0;
+    font-family: inherit;
+    transition: var(--transition-standard);
+}
+
+.btn-icon-back:hover {
+    opacity: 0.7;
+    transform: translateX(-4px);
+}
+
+/* Footer inline link button */
+.btn-footer-link {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.btn-footer-link:hover {
+    color: var(--text-primary);
+}
+
+/* Status text classes */
+.status-risk  { color: #e30000; font-weight: 600; }
+.status-clean { color: #00a650; font-weight: 400; }
+
+
+/* =============================================================================
+   5. Screen Layout
+   All screens hidden by default; .active reveals with fade animation.
+============================================================================= */
+.screen {
+    display: none;
+    padding-top: var(--nav-height);
+    min-height: 100vh;
+}
+
+@supports (min-height: 100dvh) {
+    .screen {
+        min-height: 100dvh;
+    }
+
+    #screen-map {
+        min-height: unset !important;
+        height: 100vh !important;
+    }
+}
+
+.screen.active {
+    display: block;
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* =============================================================================
+   6. Loading Spinner
+============================================================================= */
+.upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - var(--nav-height) - 40px);
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(0, 113, 227, 0.2);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+/* =============================================================================
+   7. Footer
+============================================================================= */
+.global-footer {
+    padding: 24px 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.footer-container {
+    max-width: 1024px;
+    margin: 0 auto;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+

@@ -1,0 +1,314 @@
+/* =============================================================================
+   PhotoIntel â€” landing.css
+   -----------------------------------------------------------------------------
+   Styles specific to the landing page (screen-landing).
+   Includes: hero section, upload dropzones, capabilities grid,
+   how it works steps, and the analysis type modal.
+
+   Requires base.css to be loaded first.
+============================================================================= */
+
+
+/* =============================================================================
+   1. Hero Section
+============================================================================= */
+.landing-hero {
+    text-align: center;
+    padding-top: calc(var(--nav-height) + 60px);
+    padding-bottom: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.reveal-text {
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.hero-subtitle {
+    font-size: clamp(16px, 2vw, 20px);
+    color: var(--text-secondary);
+    margin-top: 15px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Large CTA pill button */
+.btn-primary-large {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 18px 36px;
+    font-size: 17px;
+    font-weight: 500;
+    border-radius: 980px;
+    margin-top: 40px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: var(--transition-standard);
+}
+
+.btn-primary-large:hover {
+    transform: scale(1.03);
+    background-color: #0077ed;
+}
+
+
+/* =============================================================================
+   2. Hero Dropzones
+   Two side-by-side drag-and-drop upload targets.
+============================================================================= */
+.hero-dropzones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 700px;
+    margin: 90px auto 0;
+}
+
+.hero-drop-area {
+    background: var(--bg-secondary);
+    border: 2px dashed rgba(0, 0, 0, 0.12);
+    border-radius: 24px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-standard);
+}
+
+.hero-drop-area:hover,
+.hero-drop-area.drag-over {
+    border-color: var(--accent-color);
+    background: rgba(0, 113, 227, 0.03);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 113, 227, 0.1);
+}
+
+.hero-drop-icon {
+    margin-bottom: 16px;
+}
+
+.drop-lucide-icon {
+    width: 40px;
+    height: 40px;
+    color: var(--accent-color);
+    stroke-width: 1.5px;
+}
+
+.hero-drop-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.hero-drop-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+
+/* =============================================================================
+   3. Section Layout
+============================================================================= */
+.section-container {
+    padding: 80px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 32px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+
+/* =============================================================================
+   4. Capabilities Grid (What PhotoIntel Does)
+============================================================================= */
+.capabilities-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .capabilities-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.info-block {
+    background: var(--bg-secondary);
+    padding: 40px;
+    border-radius: 24px;
+    transition: var(--transition-standard);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-block:hover {
+    transform: translateY(-5px);
+    background: #fff;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 113, 227, 0.2);
+}
+
+.block-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    stroke-width: 1.5px;
+    display: block;
+}
+
+
+/* =============================================================================
+   5. How It Works
+   Three numbered steps with gradient dividers between them.
+============================================================================= */
+.how-it-works {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 40px;
+}
+
+.process-steps {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin-top: 50px;
+}
+
+@media (max-width: 768px) {
+    .process-steps {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .step-divider {
+        display: none;
+    }
+}
+
+.step {
+    flex: 1;
+    padding: 0 32px;
+}
+
+.step-num {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+}
+
+.step-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.step-desc {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.step-divider {
+    width: 1px;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.12), transparent);
+    flex-shrink: 0;
+    align-self: center;
+}
+
+
+/* =============================================================================
+   6. Analysis Modal
+   Backdrop blur overlay with two upload option cards.
+============================================================================= */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 560px;
+    width: 90%;
+    text-align: center;
+}
+
+.modal-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.modal-subtitle {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 32px;
+}
+
+.modal-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.modal-option {
+    background: var(--bg-secondary);
+    border-radius: 18px;
+    padding: 32px 20px;
+    cursor: pointer;
+    transition: var(--transition-standard);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.modal-option:hover {
+    background: white;
+    border-color: var(--accent-color);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 113, 227, 0.1);
+}
+
+.modal-option-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.modal-option-label {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.modal-option-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}

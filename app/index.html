@@ -4,135 +4,367 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhotoIntel | Forensic Analysis System</title>
-
+ 
+    <!-- CesiumJS — 3D Globe Engine -->
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Cesium.js"></script>
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+ 
+    <!-- Google Fonts — Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="style.css">
+ 
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+ 
+    <!-- PhotoIntel Stylesheets -->
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="landing.css">
+    <link rel="stylesheet" href="app.css">
 </head>
 <body>
-
+ 
+    <!-- =====================================================================
+         Navigation Bar
+         Floating glass pill with logo and nav links.
+    ====================================================================== -->
     <nav class="glass-nav" aria-label="Main Navigation">
         <div class="nav-container">
-            <div class="logo" role="button" tabindex="0" onclick="showScreen('screen-landing')" aria-label="PhotoIntel Home">
-                PhotoIntel
+            <div class="logo" role="button" tabindex="0"
+                 onclick="showScreen('screen-landing')"
+                 aria-label="PhotoIntel Home">
+                <span class="logo-text">PhotoIntel</span>
             </div>
             <ul class="nav-actions">
-                <li><button class="btn-nav" onclick="showScreen('screen-upload-folder')" aria-label="Analyze Folder">Folder Analysis</button></li>
-                <li><button class="btn-nav btn-primary" onclick="showScreen('screen-upload-single')" aria-label="Analyze Single Image">Image Analysis</button></li>
+                <li>
+                    <a class="btn-nav"
+                       href="https://github.com/Shilo-Wexler/PhotoIntel"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        Source ↗
+                    </a>
+                </li>
+                <li>
+                    <button class="btn-nav" onclick="showScreen('screen-about')">
+                        About
+                    </button>
+                </li>
             </ul>
         </div>
     </nav>
-
+ 
     <main id="app-content">
-
-        <section id="screen-landing" class="screen active" aria-labelledby="hero-title">
-            <div class="hero-section">
-                <h1 id="hero-title" class="reveal-text">The Truth Behind The Pixels.</h1>
-                <p class="hero-subtitle">Advanced forensic system for image authentication and geospatial auditing</p>
-                <div class="scroll-hint" aria-hidden="true">Scroll to explore capabilities</div>
-            </div>
-
-            <div class="info-content">
-                <article class="info-block">
-                    <h2>AI Signature Detection</h2>
-                    <p>Identify digital markers and pixel anomalies indicating generative AI creation.</p>
-                </article>
-                <article class="info-block">
-                    <h2>Geospatial Integrity</h2>
-                    <p>Cross-reference GPS data with timestamp to detect physical location spoofing.</p>
-                </article>
-                <article class="info-block">
-                    <h2>Optical Audit</h2>
-                    <p>Verify consistency between exposure metadata and the declared capture time.</p>
-                </article>
-            </div>
-        </section>
-
-        <section id="screen-upload-single" class="screen" aria-labelledby="title-single">
-            <div class="upload-wrapper">
-                <button class="btn-icon-back" onclick="showScreen('screen-landing')" aria-label="Go back to home">← Back</button>
-                <div id="dropzone-single" class="drop-area" role="region" aria-label="Image drop zone">
-                    <div class="drop-icon" aria-hidden="true">📸</div>
-                    <h3 id="title-single">Drop an image here</h3>
-                    <p>or click to browse your files</p>
-                    <input type="file" id="input-single" accept="image/*" hidden aria-label="Select image file">
-                    <button class="btn-action" onclick="document.getElementById('input-single').click()">Select File</button>
+ 
+        <!-- =================================================================
+             Screen: Landing
+             Hero section with dual dropzones, capabilities grid,
+             and how-it-works steps.
+        ================================================================== -->
+        <section id="screen-landing" class="screen active">
+ 
+            <!-- Hero -->
+            <div class="landing-hero">
+                <h1 class="reveal-text">The Truth <br>Behind The Pixels.</h1>
+                <p class="hero-subtitle">
+                    A forensic intelligence platform revealing hidden metadata
+                    and exposing image manipulation.
+                </p>
+ 
+                <!-- Upload dropzones — wired to setupDropzone() in app.js -->
+                <div class="hero-dropzones">
+                    <div id="dropzone-single" class="hero-drop-area"
+                         role="region" aria-label="Image drop zone">
+                        <input type="file" id="input-single" accept="image/*" hidden>
+                        <div class="hero-drop-icon">
+                            <i data-lucide="image" class="drop-lucide-icon"></i>
+                        </div>
+                        <div class="hero-drop-title">Image Analysis</div>
+                        <div class="hero-drop-desc">Drop an image or click to browse</div>
+                    </div>
+ 
+                    <div id="dropzone-folder" class="hero-drop-area"
+                         role="region" aria-label="Folder drop zone">
+                        <input type="file" id="input-folder" webkitdirectory directory hidden>
+                        <div class="hero-drop-icon">
+                            <i data-lucide="folder-open" class="drop-lucide-icon"></i>
+                        </div>
+                        <div class="hero-drop-title">Folder Analysis</div>
+                        <div class="hero-drop-desc">Drop a folder or click to browse</div>
+                    </div>
                 </div>
             </div>
-        </section>
-
-        <section id="screen-upload-folder" class="screen" aria-labelledby="title-folder">
-            <div class="upload-wrapper">
-                <button class="btn-icon-back" onclick="showScreen('screen-landing')" aria-label="Go back to home">← Back</button>
-                <div id="dropzone-folder" class="drop-area" role="region" aria-label="Folder drop zone">
-                    <div class="drop-icon" aria-hidden="true">📁</div>
-                    <h3 id="title-folder">Drop a folder here</h3>
-                    <p>We will analyze all images contained within automatically</p>
-                    <input type="file" id="input-folder" webkitdirectory directory hidden aria-label="Select folder">
-                    <button class="btn-action" onclick="document.getElementById('input-folder').click()">Select Folder</button>
+ 
+            <!-- What PhotoIntel Does -->
+            <div class="section-container">
+                <h2 class="section-title">What PhotoIntel Does</h2>
+                <div class="capabilities-grid">
+                    <article class="info-block">
+                        <i data-lucide="cpu" class="block-icon"></i>
+                        <h3>AI Signature Detection</h3>
+                        <p>Identifies generative AI fingerprints through software signatures and resolution patterns.</p>
+                    </article>
+                    <article class="info-block">
+                        <i data-lucide="map-pin" class="block-icon"></i>
+                        <h3>Geospatial Integrity</h3>
+                        <p>Validates GPS coordinates against physical boundaries and detects location spoofing.</p>
+                    </article>
+                    <article class="info-block">
+                        <i data-lucide="clock" class="block-icon"></i>
+                        <h3>Temporal Forensics</h3>
+                        <p>Exposes post-processing tampering by cross-referencing timestamps.</p>
+                    </article>
+                    <article class="info-block">
+                        <i data-lucide="aperture" class="block-icon"></i>
+                        <h3>Optical Consistency</h3>
+                        <p>Audits exposure settings against declared capture conditions.</p>
+                    </article>
                 </div>
             </div>
+ 
+            <!-- How It Works -->
+            <div class="how-it-works">
+                <h2 class="section-title">How It Works</h2>
+                <div class="process-steps">
+                    <div class="step">
+                        <div class="step-num">01</div>
+                        <h3 class="step-title">Upload</h3>
+                        <p class="step-desc">
+                            Drop a single image or an entire folder.
+                            PhotoIntel automatically scans all supported formats.
+                        </p>
+                    </div>
+                    <div class="step-divider"></div>
+                    <div class="step">
+                        <div class="step-num">02</div>
+                        <h3 class="step-title">Analyze</h3>
+                        <p class="step-desc">
+                            Seven independent forensic engines run in parallel —
+                            examining AI signatures, GPS integrity, device fingerprints,
+                            timestamps, and optical consistency.
+                        </p>
+                    </div>
+                    <div class="step-divider"></div>
+                    <div class="step">
+                        <div class="step-num">03</div>
+                        <h3 class="step-title">Investigate</h3>
+                        <p class="step-desc">
+                            Review findings in a full audit report and explore
+                            geotagged evidence on an interactive 3D globe.
+                        </p>
+                    </div>
+                </div>
+            </div>
+ 
         </section>
-
+ 
+ 
+        <!-- =================================================================
+             Screen: Loading
+             Shown while the FastAPI /analyze endpoint is processing.
+        ================================================================== -->
+        <section id="screen-loading" class="screen" aria-live="assertive">
+            <div class="upload-wrapper" style="text-align: center;">
+                <div class="spinner"></div>
+                <h2 style="margin-top: 20px;">Analyzing Data...</h2>
+                <p style="color: var(--text-secondary);">
+                    Running forensic checks via PhotoIntel Engine
+                </p>
+            </div>
+        </section>
+ 
+ 
+        <!-- =================================================================
+             Screen: Audit Summary (Report List)
+             Horizontally scrollable stats strip + scrollable image list.
+             Populated dynamically by renderStatsStrip() and renderImageList().
+        ================================================================== -->
         <section id="screen-report-list" class="screen" aria-labelledby="title-report">
             <div class="report-container">
                 <header class="report-nav">
-                    <button class="btn-text" onclick="showScreen('screen-landing')">Home</button>
-                    <h2 id="title-report">Investigation Findings</h2>
-                    <button class="btn-special" onclick="showScreen('screen-map')">View on 3D Map</button>
+                    <button class="btn-icon-back" onclick="showScreen('screen-landing')">
+                        ← Back
+                    </button>
+                    <h2 id="title-report" class="audit-title">Audit Summary</h2>
+                    <button class="btn-map" onclick="showScreen('screen-map')">
+                        <i data-lucide="globe" class="btn-map-icon"></i>
+                        View on 3D Map
+                    </button>
                 </header>
-                <div class="scrollable-list">
-                    <table id="results-table">
-                        <caption>Summary of forensic analysis for the selected collection</caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">Preview</th>
-                                <th scope="col">Filename</th>
-                                <th scope="col">Device</th>
-                                <th scope="col">Risk Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body"></tbody>
-                    </table>
-                </div>
+ 
+                <!-- Filled by renderStatsStrip() -->
+                <div class="stats-strip" id="stats-strip"></div>
+ 
+                <!-- Filled by renderImageList() -->
+                <div class="image-list" id="image-list"></div>
             </div>
         </section>
-
+ 
+ 
+        <!-- =================================================================
+             Screen: Image Detail
+             Full forensic breakdown for a single image.
+             Populated dynamically by showImageDetail().
+        ================================================================== -->
+        <section id="screen-image-detail" class="screen" aria-labelledby="title-image-detail">
+            <div class="report-container">
+                <header class="report-nav">
+                    <button class="btn-icon-back" onclick="showScreen('screen-report-list')">
+                        ← Back
+                    </button>
+                    <h2 id="title-image-detail">Image Forensics</h2>
+                    <div></div>
+                </header>
+ 
+                <!-- Filled by showImageDetail() -->
+                <div id="image-detail-content"></div>
+            </div>
+        </section>
+ 
+ 
+        <!-- =================================================================
+             Screen: 3D Map
+             Full-screen CesiumJS globe with frosted-glass sidebar.
+             Sidebar content toggled between overview and point detail
+             by renderMapOverview() and updateMapOverlay().
+        ================================================================== -->
         <section id="screen-map" class="screen">
-            <div class="map-controls">
-                <button class="btn-floating-back" onclick="showScreen('screen-report-list')" aria-label="Back to report list">Return to list</button>
-            </div>
-            <div id="cesium-container" role="application" aria-label="3D Map Globe"></div>
             <aside id="map-info-overlay" class="glass-panel" aria-live="polite">
-                <div id="overlay-content">Select a data point on the globe</div>
-            </aside>
-        </section>
-
-        <section id="screen-about" class="screen" aria-labelledby="title-about">
-            <div class="about-card">
-                <button class="btn-close" onclick="showScreen('screen-landing')" aria-label="Close about screen">×</button>
-                <h2 id="title-about">About PhotoIntel</h2>
-                <div class="about-text">
-                    <p>This system was developed as a modern forensic tool to uncover the hidden integrity of image files.</p>
+                <div class="map-controls">
+                    <button class="btn-floating-back"
+                            onclick="showScreen('screen-report-list')"
+                            aria-label="Back to report list">
+                        ← Back to Report
+                    </button>
                 </div>
-                <div class="about-links">
-                    <a href="#" target="_blank" class="github-btn" aria-label="Visit developer GitHub profile">GitHub Profile</a>
+                <!-- Filled by renderMapOverview() / updateMapOverlay() -->
+                <div id="overlay-content"></div>
+            </aside>
+ 
+            <!-- CesiumJS mounts here — initialized by MapView.init() -->
+            <div id="cesium-container" role="application" aria-label="3D Map Globe"></div>
+        </section>
+ 
+ 
+        <!-- =================================================================
+             Screen: About
+             Developer bio, tech stack, and external links.
+        ================================================================== -->
+        <section id="screen-about" class="screen" aria-labelledby="title-about">
+            <div class="about-wrapper">
+                <button class="btn-about-back" onclick="showScreen('screen-landing')">
+                    ← Back
+                </button>
+ 
+                <div class="about-content">
+                    <div class="about-header">
+                        <h1 id="title-about">About PhotoIntel</h1>
+                        <p class="about-tagline">
+                            A forensic intelligence platform for image authentication
+                            and geospatial auditing.
+                        </p>
+                    </div>
+ 
+                    <div class="about-bio">
+                        <p>
+                            I am a Computer Science and Physics student at The Open
+                            University of Israel, with a focus on data integrity and
+                            digital forensics.
+                        </p>
+                        <p>
+                            PhotoIntel began as a group capstone project during an
+                            intensive 3.5-month Python specialization. I independently
+                            expanded it from scratch into a full-stack forensic
+                            intelligence platform — applying my academic background in
+                            a system that combines metadata analysis, geospatial
+                            reasoning, and real-time 3D visualization.
+                        </p>
+                    </div>
+ 
+                    <div class="about-stack">
+                        <div class="about-section-label">Tech Stack</div>
+                        <div class="about-tags">
+                            <span class="about-tag">Python</span>
+                            <span class="about-tag">FastAPI</span>
+                            <span class="about-tag">CesiumJS</span>
+                            <span class="about-tag">Pillow</span>
+                            <span class="about-tag">JavaScript</span>
+                            <span class="about-tag">HTML / CSS</span>
+                        </div>
+                    </div>
+ 
+                    <div class="about-links">
+                        <a href="https://github.com/Shilo-Wexler/PhotoIntel"
+                           target="_blank" rel="noopener noreferrer"
+                           class="about-link-btn">
+                            PhotoIntel Repository ↗
+                        </a>
+                        <a href="https://github.com/Shilo-Wexler"
+                           target="_blank" rel="noopener noreferrer"
+                           class="about-link-btn about-link-btn-secondary">
+                            GitHub Profile ↗
+                        </a>
+                        <a href="https://www.linkedin.com/in/shilo-wexler"
+                           target="_blank" rel="noopener noreferrer"
+                           class="about-link-btn about-link-btn-linkedin">
+                            LinkedIn ↗
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
-
+ 
+ 
+        <!-- =================================================================
+             Modal: Analysis Type Selection
+             Opened by openAnalysisModal(), closed by closeAnalysisModal().
+             Currently unused — upload handled directly via hero dropzones.
+        ================================================================== -->
+        <div id="analysis-modal" class="modal-overlay" onclick="closeAnalysisModal(event)">
+            <div class="modal-content">
+                <h3 class="modal-title">Choose Analysis Type</h3>
+                <p class="modal-subtitle">Select how you'd like to submit your evidence</p>
+                <div class="modal-options">
+                    <div class="modal-option" onclick="showScreen('screen-upload-single')">
+                        <div class="modal-option-icon">📸</div>
+                        <div class="modal-option-label">Image Analysis</div>
+                        <div class="modal-option-desc">Analyze a single image file</div>
+                    </div>
+                    <div class="modal-option" onclick="showScreen('screen-upload-folder')">
+                        <div class="modal-option-icon">📁</div>
+                        <div class="modal-option-label">Folder Analysis</div>
+                        <div class="modal-option-desc">Analyze an entire collection</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+ 
     </main>
-
+ 
+ 
+    <!-- =====================================================================
+         Footer
+    ====================================================================== -->
     <footer class="global-footer">
         <div class="footer-container">
-            <p>&copy; 2026 PhotoIntel Forensic System. Released under the MIT License.</p>
-            <button class="btn-link" onclick="showScreen('screen-about')">About the Project</button>
+            <p>
+                © 2026 PhotoIntel Forensic System · MIT License ·
+                <button class="btn-footer-link" onclick="showScreen('screen-about')">
+                    About
+                </button>
+            </p>
         </div>
     </footer>
-
-    <script src="report_data.js"></script>
+ 
+ 
+    <!-- =====================================================================
+         Scripts
+         Load order matters:
+           1. report_data.js  — static fallback data (dev only)
+           2. map_view.js     — CesiumJS MapView object
+           3. app.js          — SPA controller (depends on MapView)
+    ====================================================================== -->
+    <script src="map_view.js"></script>
+    <script src="ui.js"></script>
+    <script src="map.js"></script>
     <script src="app.js"></script>
+ 
 </body>
 </html>

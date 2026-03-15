@@ -1,0 +1,606 @@
+/* =============================================================================
+   PhotoIntel â€” app.css
+   -----------------------------------------------------------------------------
+   Styles for all application screens after the landing page:
+   map view, audit summary, image detail, and about screen.
+
+   Requires base.css to be loaded first.
+============================================================================= */
+
+
+/* =============================================================================
+   1. Map View
+   Full-screen CesiumJS globe with a frosted-glass sidebar panel.
+============================================================================= */
+#screen-map {
+    padding-top: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: #000;
+    min-height: unset;
+}
+
+body.map-active .glass-nav {
+    display: none;
+}
+
+body.map-active {
+    background-color: #000;
+}
+
+#cesium-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Frosted glass sidebar panel */
+.glass-panel {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 360px;
+    height: 100vh;
+    background: rgba(15, 15, 18, 0.60);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-right: none;
+    color: white;
+    z-index: 100;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6);
+}
+
+.glass-panel::-webkit-scrollbar {
+    display: none;
+}
+
+.map-controls {
+    padding: 24px 24px 0 24px;
+}
+
+/* Scrollable overlay content inside sidebar */
+#overlay-content {
+    padding: 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-grow: 1;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#overlay-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* Stat boxes inside sidebar */
+.stat-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.stat-box h4 {
+    margin: 0 0 6px 0;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-box .val {
+    font-size: 26px;
+    font-weight: 600;
+    color: white;
+}
+
+/* Hide default Cesium fullscreen button */
+.cesium-viewer-fullscreenContainer {
+    display: none !important;
+}
+
+/* Map sidebar back button */
+.btn-floating-back {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.btn-floating-back:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* 3D Map button â€” gradient pill with glow */
+.btn-map {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #0071e3, #0055b3);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 980px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition-standard);
+    box-shadow: 0 4px 15px rgba(0, 113, 227, 0.35);
+}
+
+.btn-map:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 113, 227, 0.45);
+}
+
+.btn-map:active {
+    transform: scale(0.97);
+}
+
+.btn-map-icon {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2px;
+}
+
+
+/* =============================================================================
+   2. Audit Summary â€” Report Container & Header
+============================================================================= */
+#screen-report-list {
+    background: linear-gradient(135deg, #e8f0fe 0%, #f5f5f7 50%, #fce8f0 100%);
+    min-height: 100vh;
+}
+
+.report-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 40px;
+    overflow-x: visible;
+}
+
+.report-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+}
+
+/* Title with centered gradient underline */
+.audit-title {
+    position: relative;
+    padding-bottom: 16px;
+}
+
+.audit-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 3px;
+    background: linear-gradient(to right, transparent, #1d1d1f, transparent);
+}
+
+
+/* =============================================================================
+   3. Audit Summary â€” Stats Strip
+   Horizontally scrollable row of frosted-glass metric cards.
+============================================================================= */
+.stats-strip {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 20px 0;
+    margin-bottom: 50px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+}
+
+.stats-strip::-webkit-scrollbar {
+    display: none;
+}
+
+/* Glass morphism metric card */
+.stat-card {
+    flex-shrink: 0;
+    position: relative;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: var(--border-radius-large);
+    padding: 16px 20px;
+    min-width: 120px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    overflow: visible;
+}
+
+/* Outer glow border via pseudo-element */
+.stat-card::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: calc(var(--border-radius-large) + 3px);
+    background: linear-gradient(135deg, rgba(200, 200, 210, 0.4), rgba(240, 240, 245, 0.2));
+    z-index: -1;
+    border: 1px solid rgba(180, 180, 190, 0.3);
+}
+
+/* Red tint for anomaly cards */
+.stat-card-alert {
+    background: rgba(227, 0, 0, 0.05);
+    border: 1px solid rgba(227, 0, 0, 0.15);
+}
+
+.stat-card-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.stat-card-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-card-alert .stat-card-value {
+    color: #e30000;
+}
+
+.stat-card-value-small {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+
+/* =============================================================================
+   4. Audit Summary â€” Image List
+   Scrollable list of clickable image rows with numbered index circles.
+============================================================================= */
+.image-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 40px;
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.image-list::-webkit-scrollbar {
+    display: none;
+}
+
+.image-list-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg-primary);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: var(--border-radius-large);
+    cursor: pointer;
+    transition: var(--transition-standard);
+}
+
+.image-list-item:hover {
+    background: var(--bg-secondary);
+    transform: translateX(4px);
+}
+
+/* Red left border for suspicious items */
+.image-list-item-risk {
+    border-left: 3px solid #e30000;
+}
+
+/* Numbered circle index */
+.image-list-index {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.image-list-item-risk .image-list-index {
+    background: rgba(227, 0, 0, 0.08);
+    border-color: rgba(227, 0, 0, 0.15);
+    color: #e30000;
+}
+
+.image-list-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.image-list-filename {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.image-list-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* Risk/Clean text badge */
+.image-list-badge {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.badge-clean { color: #00a650; }
+.badge-risk  { color: #e30000; }
+
+.image-list-arrow {
+    font-size: 20px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+
+/* =============================================================================
+   5. Image Detail Screen
+   Full forensic breakdown for a single image.
+============================================================================= */
+.detail-card {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px 0 60px;
+}
+
+.detail-status {
+    padding: 12px 20px;
+    border-radius: var(--border-radius-large);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 32px;
+}
+
+.detail-status-risk {
+    background: rgba(227, 0, 0, 0.06);
+    color: #e30000;
+    border: 1px solid rgba(227, 0, 0, 0.15);
+}
+
+.detail-status-clean {
+    background: rgba(0, 166, 80, 0.06);
+    color: #00a650;
+    border: 1px solid rgba(0, 166, 80, 0.15);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.detail-field {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-large);
+    padding: 16px;
+}
+
+.detail-field-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.detail-field-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+.detail-flags-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.detail-flags {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-flag {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--border-radius-large);
+    font-size: 14px;
+}
+
+.detail-flag-triggered {
+    background: rgba(227, 0, 0, 0.05);
+    border: 1px solid rgba(227, 0, 0, 0.12);
+    color: #e30000;
+}
+
+.detail-flag-clear {
+    background: var(--bg-secondary);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
+}
+
+.detail-flag-icon {
+    font-size: 16px;
+}
+
+
+/* =============================================================================
+   6. About Screen
+============================================================================= */
+.about-wrapper {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+}
+
+.btn-about-back {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 8px 0;
+    margin-bottom: 48px;
+    display: block;
+    transition: var(--transition-standard);
+}
+
+.btn-about-back:hover {
+    opacity: 0.7;
+    transform: translateX(-4px);
+}
+
+.about-header {
+    margin-bottom: 40px;
+}
+
+.about-header h1 {
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+}
+
+.about-tagline {
+    font-size: 18px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.about-bio {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.about-bio p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-primary);
+}
+
+.about-section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.about-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 40px;
+}
+
+.about-tag {
+    background: var(--bg-secondary);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 980px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.about-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.about-link-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 980px;
+    font-size: 15px;
+    font-family: inherit;
+    text-decoration: none;
+    transition: var(--transition-standard);
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.about-link-btn:hover {
+    background: #0077ed;
+    transform: translateY(-2px);
+}
+
+.about-link-btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.about-link-btn-secondary:hover {
+    background: #e8e8ed;
+    transform: translateY(-2px);
+}
+
+.about-link-btn-linkedin {
+    background: #0a66c2;
+    color: white;
+}
+
+.about-link-btn-linkedin:hover {
+    background: #0958a8;
+    transform: translateY(-2px);
+}
+
