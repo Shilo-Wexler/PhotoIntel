@@ -210,10 +210,14 @@ class PhotoAnalyzer:
             ImageRiskProfile: A structured profile containing risk flags and
                 processed data for report generation.
         """
+        ai_status = rules.is_ai_generated(image)
+
         if not image.has_exif:
             return ImageRiskProfile(
                 filename=image.filename,
-                full_path=image.full_path
+                full_path=image.full_path,
+                ai_issue=ai_status,
+                is_suspicious=ai_status
             )
 
         ai_status = rules.is_ai_generated(image)

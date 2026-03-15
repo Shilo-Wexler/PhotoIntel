@@ -37,9 +37,9 @@ def is_ai_generated(metadata: ImageMetadata) -> bool:
     if not w or not h:
         return False
 
-    if ((w == h and w in fc.AI_RESOLUTIONS)
-        or (w % fc.AI_MODULO == 0 and h % fc.AI_MODULO == 0)):
-        return True
+    if not metadata.has_exif and w and h:
+        if w % fc.AI_MODULO == 0 and h % fc.AI_MODULO == 0:
+            return True
 
     ratio = round(w/h, 2)
 

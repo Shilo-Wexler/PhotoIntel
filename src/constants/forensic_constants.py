@@ -32,17 +32,21 @@ EDITING_SOFTWARE: set[str] = {
 AI_SOFTWARE: set[str] = {
     'midjourney', 'stable diffusion', 'stablediffusion', 'dalle', 'dall-e',
     'automatic1111', 'invokeai', 'comfyui', 'runway', 'leonardo',
-    'dreamstudio', 'nightcafe', 'nanobanana'
+    'dreamstudio', 'nightcafe', 'nanobanana', 'sora', 'copilot',
+    'firefly', 'adobe firefly', 'bing image', 'flux', 'ideogram',
+    'gemini', 'imagen', 'ideogram',
 }
 
 VIRTUAL_DEVICE: set[str] = {
     'emulator', 'simulator', 'virtual', 'vmware', 'androidid',
     'genymotion', 'bluestacks', 'qemu', 'nox', 'memu', 'vbox', 'virtualbox'
 }
-
 # --- AI & Geometry Specific Constants ---
 AI_MODULO: int = 64                    # Math signature of Diffusion models
-AI_RESOLUTIONS: set[int] = {512, 768, 1024, 2048}  # Added 768 & 2048 for broader SD coverage
+AI_RESOLUTIONS: set[int] = {           # Added 768 & 2048 for broader SD coverage
+        512, 640, 768, 896, 1024,
+        1152, 1280, 1344, 1536, 2048
+}
 
 # Standard aspect ratios in photography (Requires rounding to 2 decimal places before lookup)
 STANDARD_ASPECT_RATIOS: set[float] = {
