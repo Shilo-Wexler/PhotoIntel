@@ -88,6 +88,7 @@ function renderImageList(profiles) {
     });
 
     list.innerHTML = sorted.map((profile, index) => {
+        const originalIndex = profiles.indexOf(profile);
         const isRisk = profile.is_suspicious;
         const safeFilename = sanitizeHTML(profile.filename || 'Unknown');
         const safeDevice   = sanitizeHTML(profile.device   || 'Unknown Device');
@@ -99,7 +100,7 @@ function renderImageList(profiles) {
 
         return `
             <div class="image-list-item ${isRisk ? 'image-list-item-risk' : ''}"
-                 onclick="showImageDetail(${index})">
+                 onclick="showImageDetail(${originalIndex})">
                 <div class="image-list-index">${index + 1}</div>
                 <div class="image-list-info">
                     <div class="image-list-filename">${safeFilename}</div>

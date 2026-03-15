@@ -34,7 +34,7 @@ AI_SOFTWARE: set[str] = {
     'automatic1111', 'invokeai', 'comfyui', 'runway', 'leonardo',
     'dreamstudio', 'nightcafe', 'nanobanana', 'sora', 'copilot',
     'firefly', 'adobe firefly', 'bing image', 'flux', 'ideogram',
-    'gemini', 'imagen', 'ideogram',
+    'gemini', 'imagen', 'ideogram', 'grok'
 }
 
 VIRTUAL_DEVICE: set[str] = {

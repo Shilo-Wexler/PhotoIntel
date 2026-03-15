@@ -32,19 +32,21 @@ def is_ai_generated(metadata: ImageMetadata) -> bool:
     if ai_in_fields:
         return True
 
+    if not metadata.has_exif:
+        filename = (metadata.filename or '').lower()
+        filename = filename.replace(' ', '_').replace('-', '_').replace('.', '_')
+        if any(sig in filename for sig in fc.AI_SOFTWARE):
+            return True
+
     w, h = metadata.pixel_width, metadata.pixel_height
 
     if not w or not h:
         return False
 
     if not metadata.has_exif and w and h:
-        if w % fc.AI_MODULO == 0 and h % fc.AI_MODULO == 0:
+        if (w in fc.AI_RESOLUTIONS or h in fc.AI_RESOLUTIONS) and \
+                (w % fc.AI_MODULO == 0 and h % fc.AI_MODULO == 0):
             return True
-
-    ratio = round(w/h, 2)
-
-    if ratio not in fc.STANDARD_ASPECT_RATIOS and not metadata.has_exif:
-        return True
 
     return False
 
