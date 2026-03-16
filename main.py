@@ -25,6 +25,7 @@ from fastapi.staticfiles import StaticFiles
 
 from src.analyzer.analyzer import PhotoAnalyzer
 from src.extractor.extractor import extract_all
+from src.analyzer.forensic_prompt import SYSTEM_INSTRUCTIONS
 
 # ─────────────────────────────────────────
 # API Keys
@@ -132,55 +133,8 @@ async def ask_ai(request: dict):
         profile  = request.get("profile", {})
         raw      = profile.get("raw_metadata", {}) or {}
 
-        prompt = f"""You are PhotoIntel's forensic analysis assistant.
-        You help users understand why specific images were flagged as suspicious.
-
-        Be direct, technical, and concise. Answer in a maximum of 60–80 words.
-        Answer in plain text only. No markdown, no asterisks, no bold, no numbered lists. Write in flowing sentences.
-
-        System developer is Shilo Wexler.
-
-
-        FORENSIC RULES CONTEXT
-
-        AI Detection:
-        resolution divisible by 64, known AI software signatures in EXIF, AI tool names in filename, or unusual aspect ratios typical of generative models.
-
-        GPS Tampering:
-        integer coordinates, coordinates outside physical Earth boundaries, or clearly artificial GPS precision patterns.
-
-        Software Editing:
-        known editing software detected in EXIF software field (Photoshop, Lightroom, GIMP, etc.).
-
-        Temporal Inconsistency:
-        modification date occurs earlier than the original capture date.
-
-        Optical Mismatch:
-        camera settings inconsistent with environmental conditions, such as high ISO or long exposure recorded during daytime.
-
-        Altitude Anomaly:
-        GPS altitude outside physically plausible range.
-
-        Metadata Absence:
-        missing EXIF metadata in images where modern smartphones or cameras normally embed it.
-
-        Device Inconsistency:
-        camera make and model combinations that are technically impossible or inconsistent.
-
-
-        ANALYSIS GUIDELINES
-
-        Base conclusions strictly on the provided metadata and forensic flags.
-
-        Reference specific metadata fields when explaining the reason for suspicion.
-
-        Consider correlations between multiple anomalies. Multiple anomalies strengthen suspicion while a single anomaly may not be conclusive.
-
-        If evidence is insufficient, clearly state that the metadata does not provide conclusive proof of manipulation.
-
-        Never speculate beyond the provided metadata.
-
-
+        prompt = f"""{SYSTEM_INSTRUCTIONS}
+    
         IMAGE FORENSIC PROFILE
 
         Filename:    {profile.get('filename', 'N/A')}
@@ -210,11 +164,20 @@ async def ask_ai(request: dict):
         Optical Mismatch:  {profile.get('optical_issue', False)}
         Altitude Anomaly:  {profile.get('altitude_issue', False)}
         Virtual Device:    {profile.get('device_issue', False)}
+        
+        
+        COLLECTION CONTEXT:
+        Total files analyzed: {request.get('collection', {}).get('total_count', 'N/A')}
+        Suspicious files:     {request.get('collection', {}).get('suspicious_images', 'N/A')}
+        AI generated:         {request.get('collection', {}).get('ai_count', 'N/A')}
+        Geotagged files:      {request.get('collection', {}).get('images_with_gps', 'N/A')}
+        Date range:           {request.get('collection', {}).get('start_date', 'N/A')} — {request.get('collection', {}).get('end_date', 'N/A')}
+        Device switches:      {len(request.get('collection', {}).get('device_timeline_switches', []))}
 
 
         User question: {question}
         """
-        
+
         model = genai.GenerativeModel("gemini-3-flash-preview")
         response = model.generate_content(prompt)
 

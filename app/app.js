@@ -292,7 +292,8 @@ window.askAI = async function(index) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 question,
-                profile: profiles[index]
+                profile: profiles[index],
+                collection: window.currentReportData
             })
         });
 
