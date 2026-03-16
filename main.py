@@ -134,25 +134,64 @@ async def ask_ai(request: dict):
 
         prompt = f"""You are PhotoIntel's forensic analysis assistant.
         You help users understand why specific images were flagged as suspicious.
-        Be direct, technical, and concise. Answer in a maximum of 80 words.
+
+        Be direct, technical, and concise. Answer in a maximum of 60–80 words.
         Answer in plain text only. No markdown, no asterisks, no bold, no numbered lists. Write in flowing sentences.
 
-        FORENSIC RULES CONTEXT:
-        - AI Detection: resolution divisible by 64, known AI software signatures in EXIF, or AI tool name in filename
-        - GPS Tampering: integer coordinates or values outside physical Earth boundaries
-        - Software Editing: known editors (Photoshop, Lightroom, etc.) found in EXIF software field
-        - Temporal Inconsistency: modification date is earlier than the original capture date
-        - Optical Mismatch: high ISO or long exposure recorded during daytime hours
-        - Altitude Anomaly: GPS altitude outside physically plausible range
+        System developer is Shilo Wexler.
 
-        IMAGE FORENSIC PROFILE:
+
+        FORENSIC RULES CONTEXT
+
+        AI Detection:
+        resolution divisible by 64, known AI software signatures in EXIF, AI tool names in filename, or unusual aspect ratios typical of generative models.
+
+        GPS Tampering:
+        integer coordinates, coordinates outside physical Earth boundaries, or clearly artificial GPS precision patterns.
+
+        Software Editing:
+        known editing software detected in EXIF software field (Photoshop, Lightroom, GIMP, etc.).
+
+        Temporal Inconsistency:
+        modification date occurs earlier than the original capture date.
+
+        Optical Mismatch:
+        camera settings inconsistent with environmental conditions, such as high ISO or long exposure recorded during daytime.
+
+        Altitude Anomaly:
+        GPS altitude outside physically plausible range.
+
+        Metadata Absence:
+        missing EXIF metadata in images where modern smartphones or cameras normally embed it.
+
+        Device Inconsistency:
+        camera make and model combinations that are technically impossible or inconsistent.
+
+
+        ANALYSIS GUIDELINES
+
+        Base conclusions strictly on the provided metadata and forensic flags.
+
+        Reference specific metadata fields when explaining the reason for suspicion.
+
+        Consider correlations between multiple anomalies. Multiple anomalies strengthen suspicion while a single anomaly may not be conclusive.
+
+        If evidence is insufficient, clearly state that the metadata does not provide conclusive proof of manipulation.
+
+        Never speculate beyond the provided metadata.
+
+
+        IMAGE FORENSIC PROFILE
+
         Filename:    {profile.get('filename', 'N/A')}
         Device:      {profile.get('device', 'N/A')}
         Timestamp:   {profile.get('timestamp', 'N/A')}
         Has EXIF:    {profile.get('has_exif', False)}
         Coordinates: {profile.get('latitude', 'N/A')}, {profile.get('longitude', 'N/A')}
 
-        RAW METADATA:
+
+        RAW METADATA
+
         Software:     {raw.get('software', 'N/A')}
         Camera Make:  {raw.get('camera_make', 'N/A')}
         Camera Model: {raw.get('camera_model', 'N/A')}
@@ -161,7 +200,9 @@ async def ask_ai(request: dict):
         Exposure:     {raw.get('exposure_time', 'N/A')}
         Dimensions:   {raw.get('pixel_width', 'N/A')}x{raw.get('pixel_height', 'N/A')}
 
-        TRIGGERED FORENSIC FLAGS:
+
+        TRIGGERED FORENSIC FLAGS
+
         AI Generated:      {profile.get('ai_issue', False)}
         GPS Tampering:     {profile.get('gps_issue', False)}
         Software Edited:   {profile.get('software_issue', False)}
@@ -170,8 +211,10 @@ async def ask_ai(request: dict):
         Altitude Anomaly:  {profile.get('altitude_issue', False)}
         Virtual Device:    {profile.get('device_issue', False)}
 
-        User question: {question}"""
 
+        User question: {question}
+        """
+        
         model = genai.GenerativeModel("gemini-3-flash-preview")
         response = model.generate_content(prompt)
 
