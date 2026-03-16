@@ -271,3 +271,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+
+window.askAI = async function(index) {
+    const profiles = window.currentReportData?.image_profiles;
+    if (!profiles?.[index]) return;
+
+    const input = document.getElementById('ai-question-input');
+    const answer = document.getElementById('ai-answer');
+    const btn = document.getElementById('ai-ask-btn');
+
+    const question = input?.value?.trim();
+    if (!question) return;
+
+    btn.disabled = true;
+    answer.textContent = 'Analyzing...';
+
+    try {
+        const response = await fetch('/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                question,
+                profile: profiles[index]
+            })
+        });
+
+        const data = await response.json();
+        answer.textContent = data.answer || 'No response received.';
+
+    } catch (err) {
+        answer.textContent = 'Error contacting AI assistant.';
+        console.error(err);
+    } finally {
+        btn.disabled = false;
+    }
+};

@@ -105,6 +105,7 @@ function renderImageList(profiles) {
                 <div class="image-list-info">
                     <div class="image-list-filename">${safeFilename}</div>
                     <div class="image-list-meta">${safeDevice} · ${timestamp}</div>
+                    <div class="image-list-hint">Ask AI about this image ›</div>
                 </div>
                 <div class="image-list-badge ${isRisk ? 'badge-risk' : 'badge-clean'}">
                     ${isRisk ? 'High Risk' : 'Clean'}
@@ -187,6 +188,26 @@ window.showImageDetail = function(index) {
                     </div>
                 `).join('')}
             </div>
+            <div class="ai-assistant">
+            <div class="ai-assistant-title">
+                <i data-lucide="message-circle" style="width:14px;height:14px;margin-right:6px;vertical-align:middle;"></i>
+                Ask AI about this image
+            </div>
+            <div class="ai-input-row">
+                <input 
+                    type="text" 
+                    id="ai-question-input"
+                    class="ai-question-input"
+                    maxlength="200"
+                    placeholder="e.g. Why was this flagged as AI generated?"
+                    onkeydown="if(event.key==='Enter') askAI(${index})"
+                />
+                <button class="ai-ask-btn" onclick="askAI(${index})" id="ai-ask-btn">
+                    <i data-lucide="send" style="width:14px;height:14px;"></i>
+                </button>
+            </div>
+            <div class="ai-answer" id="ai-answer"></div>
+        </div>
         </div>
     `;
 

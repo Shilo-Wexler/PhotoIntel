@@ -129,4 +129,5 @@ images_copy/
 main_test.py
 main_t.py
 app/config.js
+config.py
 app/report_data.js

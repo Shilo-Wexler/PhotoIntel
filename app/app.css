@@ -362,6 +362,12 @@ body.map-active {
     color: var(--text-secondary);
     margin-top: 2px;
 }
+.image-list-hint {
+    font-size: 11px;
+    color: var(--accent-color);
+    margin-top: 2px;
+    opacity: 0.7;
+}
 
 /* Risk/Clean text badge */
 .image-list-badge {
@@ -604,3 +610,76 @@ body.map-active {
     transform: translateY(-2px);
 }
 
+/* =========================================
+   7. AI Assistant
+========================================= */
+.ai-assistant {
+    margin-top: 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-large);
+    padding: 20px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.ai-assistant-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.ai-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.ai-question-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 980px;
+    border: 1px solid rgba(0,0,0,0.08);
+    font-family: inherit;
+    font-size: 14px;
+    background: white;
+    outline: none;
+    transition: var(--transition-standard);
+}
+
+.ai-question-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(0,113,227,0.1);
+}
+
+.ai-ask-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 980px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: var(--transition-standard);
+}
+
+.ai-ask-btn:hover {
+    background: #0077ed;
+    transform: scale(1.05);
+}
+
+.ai-ask-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ai-answer {
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    min-height: 0;
+    transition: var(--transition-standard);
+    white-space: pre-line;
+}
