@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from src.models.raw import ImageMetadata
+
 
 @dataclass(frozen=True)
 class ImageRiskProfile:
@@ -60,6 +62,7 @@ class ImageRiskProfile:
     # File Identification
     filename: str
     full_path: str
+    raw_metadata: ImageMetadata
 
     # Parsed Context
     device: Optional[str] = None

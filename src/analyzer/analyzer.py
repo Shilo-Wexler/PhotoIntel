@@ -217,7 +217,8 @@ class PhotoAnalyzer:
                 filename=image.filename,
                 full_path=image.full_path,
                 ai_issue=ai_status,
-                is_suspicious=ai_status
+                is_suspicious=ai_status,
+                raw_metadata=image
             )
 
         ai_status = rules.is_ai_generated(image)
@@ -239,6 +240,7 @@ class PhotoAnalyzer:
         return ImageRiskProfile(
             filename=image.filename,
             full_path=image.full_path,
+            raw_metadata=image,
             device=device_name,
             timestamp=timestamp,
             latitude=image.latitude,

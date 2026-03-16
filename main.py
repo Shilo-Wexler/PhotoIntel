@@ -3,16 +3,12 @@ PhotoIntel — main.py
 ---------------------
 FastAPI application entry point.
 
-Exposes a single POST /analyze endpoint that accepts image files,
-runs them through the forensic extraction and analysis pipeline,
-and returns a structured CollectionInsights report as JSON.
+Exposes two API endpoints:
+  - POST /analyze  — Forensic analysis pipeline for uploaded images.
+  - POST /ask      — AI assistant powered by Gemini for forensic Q&A.
 
 The frontend (app/) is served as static files mounted at the root path,
 making the entire application accessible from a single server process.
-
-Usage:
-    python main.py
-    uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 """
 
 import logging
@@ -22,12 +18,27 @@ import tempfile
 from dataclasses import asdict
 from typing import List
 
+import google.generativeai as genai
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from src.analyzer.analyzer import PhotoAnalyzer
 from src.extractor.extractor import extract_all
+
+# ─────────────────────────────────────────
+# API Keys
+# ─────────────────────────────────────────
+
+try:
+    from config import GEMINI_API_KEY as _LOCAL_GEMINI_KEY
+except ImportError:
+    _LOCAL_GEMINI_KEY = None
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or _LOCAL_GEMINI_KEY
+
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 # ─────────────────────────────────────────
 # Logging
@@ -61,32 +72,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # ─────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────
 
 @app.post("/analyze", summary="Analyze uploaded image files")
 async def analyze_images(files: List[UploadFile] = File(...)):
-    """
-    Accepts one or more image files, runs the full forensic pipeline,
-    and returns a CollectionInsights report serialized as JSON.
-
-    Pipeline:
-        1. Save uploaded files to a temporary directory.
-        2. Extract raw EXIF metadata via the Extractor engine.
-        3. Analyze metadata with seven forensic rule engines.
-        4. Return the aggregated CollectionInsights as a JSON dict.
-
-    Raises:
-        400 — No extractable metadata found in the uploaded files.
-        500 — Internal server error during extraction or analysis.
-    """
     temp_dir = tempfile.mkdtemp()
     logger.info(f"Received {len(files)} file(s) for analysis.")
 
     try:
-        # Save files with sanitized names to avoid OS-level path issues
         for file in files:
             safe_name = (
                 os.path.basename(file.filename)
@@ -97,7 +92,6 @@ async def analyze_images(files: List[UploadFile] = File(...)):
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
 
-        # Stage 1 — Metadata extraction
         metadata_list = extract_all(temp_dir)
         if not metadata_list:
             raise HTTPException(
@@ -107,7 +101,6 @@ async def analyze_images(files: List[UploadFile] = File(...)):
 
         logger.info(f"Extracted metadata from {len(metadata_list)} file(s).")
 
-        # Stage 2 — Forensic analysis
         insights = PhotoAnalyzer(metadata_list).analyzer()
         logger.info(
             f"Analysis complete — {insights.total_count} files, "
@@ -118,34 +111,104 @@ async def analyze_images(files: List[UploadFile] = File(...)):
 
     except HTTPException:
         raise
-
     except Exception as e:
         logger.exception("Unexpected error during analysis.")
         raise HTTPException(status_code=500, detail=str(e))
-
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@app.post("/ask", summary="Ask the AI forensic assistant about an image")
+async def ask_ai(request: dict):
+    """
+    Accepts a user question alongside a forensic profile,
+    and returns a concise Gemini response.
+    """
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="Gemini API Key not configured.")
+
+    try:
+        question = request.get("question", "")
+        profile  = request.get("profile", {})
+        raw      = profile.get("raw_metadata", {}) or {}
+
+        prompt = f"""You are PhotoIntel's forensic analysis assistant.
+        You help users understand why specific images were flagged as suspicious.
+        Be direct, technical, and concise. Answer in a maximum of 80 words.
+        Answer in plain text only. No markdown, no asterisks, no bold, no numbered lists. Write in flowing sentences.
+
+        FORENSIC RULES CONTEXT:
+        - AI Detection: resolution divisible by 64, known AI software signatures in EXIF, or AI tool name in filename
+        - GPS Tampering: integer coordinates or values outside physical Earth boundaries
+        - Software Editing: known editors (Photoshop, Lightroom, etc.) found in EXIF software field
+        - Temporal Inconsistency: modification date is earlier than the original capture date
+        - Optical Mismatch: high ISO or long exposure recorded during daytime hours
+        - Altitude Anomaly: GPS altitude outside physically plausible range
+
+        IMAGE FORENSIC PROFILE:
+        Filename:    {profile.get('filename', 'N/A')}
+        Device:      {profile.get('device', 'N/A')}
+        Timestamp:   {profile.get('timestamp', 'N/A')}
+        Has EXIF:    {profile.get('has_exif', False)}
+        Coordinates: {profile.get('latitude', 'N/A')}, {profile.get('longitude', 'N/A')}
+
+        RAW METADATA:
+        Software:     {raw.get('software', 'N/A')}
+        Camera Make:  {raw.get('camera_make', 'N/A')}
+        Camera Model: {raw.get('camera_model', 'N/A')}
+        ISO:          {raw.get('iso', 'N/A')}
+        F-Number:     {raw.get('f_number', 'N/A')}
+        Exposure:     {raw.get('exposure_time', 'N/A')}
+        Dimensions:   {raw.get('pixel_width', 'N/A')}x{raw.get('pixel_height', 'N/A')}
+
+        TRIGGERED FORENSIC FLAGS:
+        AI Generated:      {profile.get('ai_issue', False)}
+        GPS Tampering:     {profile.get('gps_issue', False)}
+        Software Edited:   {profile.get('software_issue', False)}
+        Temporal Issue:    {profile.get('temporal_issue', False)}
+        Optical Mismatch:  {profile.get('optical_issue', False)}
+        Altitude Anomaly:  {profile.get('altitude_issue', False)}
+        Virtual Device:    {profile.get('device_issue', False)}
+
+        User question: {question}"""
+
+        model = genai.GenerativeModel("gemini-3-flash-preview")
+        response = model.generate_content(prompt)
+
+        logger.info(f"Gemini response for: {profile.get('filename', 'unknown')}")
+        return {"answer": response.text}
+
+    except Exception as e:
+        logger.exception("Gemini API error.")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────
+# Config.js — inject Cesium token at startup
+# ─────────────────────────────────────────
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+WEB_DIR  = os.path.join(BASE_DIR, "app")
+
+cesium_token = os.environ.get("CESIUM_TOKEN", "")
+if cesium_token and os.path.exists(WEB_DIR):
+    config_path = os.path.join(WEB_DIR, "config.js")
+    with open(config_path, "w") as f:
+        f.write(f'const CONFIG = {{ CESIUM_TOKEN: "{cesium_token}" }};')
+    logger.info("config.js written with Cesium token.")
 
 
 # ─────────────────────────────────────────
 # Static Frontend
 # ─────────────────────────────────────────
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-WEB_DIR = os.path.join(BASE_DIR, "app")
-
 if os.path.exists(WEB_DIR):
-    # Mount the frontend at root — must be registered after all API routes
     app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="ui")
     logger.info(f"Serving frontend from: {WEB_DIR}")
 else:
     logger.warning(f"Frontend directory not found: {WEB_DIR}")
 
-# ─────────────────────────────────────────
-# Entry Point
-# ─────────────────────────────────────────
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8080)
