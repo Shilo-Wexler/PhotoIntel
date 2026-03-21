@@ -168,5 +168,5 @@ PhotoIntel began as a group capstone project during an intensive Python speciali
  
 ## 📄 License
  
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](https://opensource.org/licenses/MIT).
  
