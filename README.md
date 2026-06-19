@@ -19,7 +19,7 @@
  
 ---
  
-## 📸 System Previews
+##  System Previews
  
 <div align="center">
   <img src="img/globusAndStats.png" alt="3D Globe with Collection Insights" width="900">
@@ -78,7 +78,7 @@
  
 ---
  
-## ⚙️ Installation
+##  Installation
  
 ### 1. Clone the repository
  
@@ -110,7 +110,7 @@ const CONFIG = {
 };
 ```
  
-> ⚠️ Both files are gitignored. See `app/config.example.js` for the frontend template.
+>  Both files are gitignored. See `app/config.example.js` for the frontend template.
  
 ### 4. Run the server
  
@@ -126,7 +126,7 @@ http://localhost:8080
  
 ---
  
-## 📁 Project Structure
+##  Project Structure
  
 ```
 PhotoIntel/
@@ -139,7 +139,7 @@ PhotoIntel/
 │   ├── ui.js               # Report rendering (stats strip, image list)
 │   ├── map.js              # Map sidebar and data integration
 │   ├── map_view.js         # CesiumJS globe wrapper
-│   └── config.js           # ⚠️ Gitignored — create manually
+│   └── config.js           #  Gitignored — create manually
 ├── src/
 │   ├── analyzer/           # Forensic rule engines
 │   ├── extractor/          # EXIF metadata extraction
@@ -149,13 +149,13 @@ PhotoIntel/
 ├── tests/
 ├── img/                    # README screenshots
 ├── main.py                 # FastAPI entry point
-├── config.py               # ⚠️ Gitignored — create manually
+├── config.py               #  Gitignored — create manually
 └── requirements.txt
 ```
  
 ---
  
-## 👤 About
+##  About
  
 Developed by **Shilo Wexler** — Computer Science and Physics student at The Open University of Israel, with a focus on data integrity and digital forensics.
  
@@ -166,7 +166,7 @@ PhotoIntel began as a group capstone project during an intensive Python speciali
  
 ---
  
-## 📄 License
+##  License
  
 Released under the [MIT License](https://opensource.org/licenses/MIT).
  
