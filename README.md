@@ -11,7 +11,7 @@
  
 ---
  
-## 🌐 Live Demo
+##  Live Demo
  
 **[→ Visit PhotoIntel Live](https://ebfdf627-231a-4352-873b-b3e4e19a0599-00-36gz5i2d1bcrs.pike.replit.dev/)**
  
@@ -53,7 +53,7 @@
  
 ---
  
-## 🔍 Features
+##  Features
  
 - **AI Signature Detection** — Identifies generative AI fingerprints through software signatures, resolution patterns, and filename heuristics
 - **Geospatial Integrity** — Validates GPS coordinates against physical boundaries and detects location spoofing
@@ -66,7 +66,7 @@
  
 ---
  
-## 🛠️ Tech Stack
+##  Tech Stack
  
 | Layer     | Technology                        |
 |-----------|-----------------------------------|
